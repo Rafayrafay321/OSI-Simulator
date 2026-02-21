@@ -14,8 +14,7 @@ export class BasePacket {
   public metadata: PacketMetaData;
   public logHistory: LogEntry[] = [];
 
-  constructor(payload: string) {
-    this.payload = payload;
+  constructor() {
     this.metadata = {
       currentLayer: LayerLevel.APPLICATION,
       direction: PacketDirection.SENDER_TO_RECEIVER,
@@ -36,6 +35,8 @@ export class BasePacket {
 
     this.logHistory.push(logEntry);
   }
+
+  // TODO:  Add set payload method
 
   // Generic header attachment API
   public addHeader(layerName: LayerLevel, data: LayerData): void {
