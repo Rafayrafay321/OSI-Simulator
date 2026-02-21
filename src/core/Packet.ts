@@ -1,8 +1,12 @@
 // Types and Interfaces
-import { Header } from './Header';
-import { PacketMetaData } from './Metadata';
-import { LogEntry } from './Logger';
-import { PacketDirection, PacketStatus } from './Metadata';
+import { Header, LayerData } from '../types';
+import {
+  PacketMetaData,
+  PacketDirection,
+  PacketStatus,
+  LayerLevel,
+} from '../types';
+import { LogEntry, LogLevel } from '../types';
 
 export class BasePacket {
   public payload: string;
@@ -13,31 +17,40 @@ export class BasePacket {
   constructor(payload: string) {
     this.payload = payload;
     this.metadata = {
-      currentLayer: '',
+      currentLayer: LayerLevel.APPLICATION,
       direction: PacketDirection.SENDER_TO_RECEIVER,
       status: PacketStatus.HEALTHY,
     };
+
+    this.addLog(LayerLevel.APPLICATION, 'Packet created', LogLevel.INFO);
   }
 
-  // TODO Each layer should define its own data interface addHeader should stay generic
-  // TODO layer validation
+  // Centralized, private logging helper
+  private addLog(layer: LayerLevel, message: string, type: LogLevel): void {
+    const logEntry: LogEntry = {
+      layer,
+      message,
+      timestamp: new Date().toISOString(),
+      type,
+    };
 
-  public addHeader(layerName: string, data: Record<string, any>): void {
-    const headerObject: Header = {
+    this.logHistory.push(logEntry);
+  }
+
+  // Generic header attachment API
+  public addHeader(layerName: LayerLevel, data: LayerData): void {
+    const header: Header = {
       layerName,
       data,
     };
 
-    const loggerObject: LogEntry = {
-      layer: layerName,
-      message: `[Layer: ${layerName}] ENCAPSULATION_SUCCESS: Added headers.`,
-      timestamp: new Date().toISOString(),
-      type: 'INFO',
-    };
-    this.headers.push(headerObject);
-
+    this.headers.push(header);
     this.metadata.currentLayer = layerName;
 
-    this.logHistory.push(loggerObject);
+    this.addLog(
+      layerName,
+      `Header attached at layer ${layerName}`,
+      LogLevel.INFO,
+    );
   }
 }
