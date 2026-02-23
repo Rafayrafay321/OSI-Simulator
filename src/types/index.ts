@@ -58,4 +58,12 @@ export interface ApplicationLayerData {
   sender: string;
 }
 
-export type LayerData = ApplicationLayerData;
+export interface TransportLayerData {
+  underlyingProtocol: string;
+  srcPort: number;
+  destPort: number;
+  segmentIndex: number;
+  totalSegment: number;
+}
+
+export type LayerData = ApplicationLayerData | TransportLayerData;

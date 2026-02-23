@@ -9,7 +9,7 @@ import {
 import { LogEntry, LogLevel } from '../types';
 
 export class BasePacket {
-  public payload: string;
+  public payload?: string;
   public headers: Header[] = [];
   public metadata: PacketMetaData;
   public logHistory: LogEntry[] = [];
@@ -36,7 +36,10 @@ export class BasePacket {
     this.logHistory.push(logEntry);
   }
 
-  // TODO:  Add set payload method
+  // For setting Payload
+  public setPayload(payload: string) {
+    this.payload = payload;
+  }
 
   // Generic header attachment API
   public addHeader(layerName: LayerLevel, data: LayerData): void {
@@ -54,4 +57,6 @@ export class BasePacket {
       LogLevel.INFO,
     );
   }
+
+  //TODO: Method for removing headers for incomming.
 }

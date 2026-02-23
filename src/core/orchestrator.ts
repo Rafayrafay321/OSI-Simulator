@@ -1,4 +1,5 @@
 import { ApplicationLayer } from '../layers/applicationLayer_7';
+import { NetworkLayer } from '../layers/networkLayer';
 import { TransportLayer } from '../layers/transportLayer_4';
 import { BasePacket } from './Packet';
 
@@ -11,7 +12,16 @@ export class Orchestrator {
         method: 'POST',
         sender: 'abdulRafay',
       },
-      new TransportLayer(),
+      new TransportLayer(
+        {
+          srcPort: 80,
+          destPort: 120,
+          segmentIndex: 0,
+          totalSegment: 0,
+          underlyingProtocol: 'TCP',
+        },
+        new NetworkLayer(),
+      ),
     );
   }
 

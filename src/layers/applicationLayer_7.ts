@@ -15,7 +15,9 @@ export class ApplicationLayer {
     this.sender = options.sender;
     this.nextLayer = nextLayer;
   }
+  // TODO Add validation for payload.
   handleOutgoing = (packet: BasePacket, payload: string): void => {
+    packet.setPayload(payload);
     packet.addHeader(LayerLevel.APPLICATION, {
       protocol: this.protocol,
       method: this.method,
@@ -24,5 +26,5 @@ export class ApplicationLayer {
 
     this.nextLayer.handleOutgoing(packet);
   };
-  processLayer7Incoming = (packet: BasePacket) => {};
+  handleIncomming = (packet: BasePacket) => {};
 }
