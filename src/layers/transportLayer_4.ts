@@ -8,6 +8,7 @@ import {
   LayerLevel,
   PacketDirection,
   Header,
+  LayerData,
 } from '../types';
 import { BasePacket } from '../core/Packet';
 
@@ -36,6 +37,56 @@ export class TransportLayer {
     newSegmentPacket.headers = [...addBaseSegmentPacketHeaders];
   }
 
+  private extractTransportLayerHeaders(packet: BasePacket): TransportLayerData {
+    const transportLayerData = packet.headers[1].data as TransportLayerData;
+    const transportLayerHeaders = {
+      underlyingProtocol: transportLayerData.underlyingProtocol,
+      srcPort: transportLayerData.srcPort,
+      destPort: transportLayerData.destPort,
+      segmentIndex: transportLayerData.segmentIndex,
+      totalSegment: transportLayerData.totalSegment,
+    };
+    return transportLayerHeaders;
+  }
+
+  private to16BitChuck(data: string): number[] {
+    const encoder = new TextEncoder();
+    // Convert string into bytes before bits.
+    const databytes = encoder.encode(data);
+
+    // Divide into 16 bit chucks
+    const chuncks: number[] = [];
+    for (let i = 0; i < databytes.length; i += 2) {
+      const high = databytes[i];
+      const low = databytes[i + 1] ?? 0;
+
+      const chunck16 = (high << 8) | low;
+      chuncks.push(chunck16);
+    }
+    return chuncks;
+  }
+  private calCheckSum(packet: BasePacket, paylaod: string) {
+    const transportHeaders = this.extractTransportLayerHeaders(packet);
+    const allChunks: number[] = [
+      ...this.to16BitChuck(paylaod),
+      ...Object.values(transportHeaders).flatMap((header) =>
+        this.to16BitChuck(header),
+      ),
+    ];
+
+    const sum = allChunks.reduce((acc, val) => {
+      acc += val;
+
+      if (acc > 0xffff) {
+        acc = (acc & 0xffff) + 1;
+      }
+      return acc;
+    }, 0);
+
+    const finalCheckSum = ~sum & 0xffff;
+    return finalCheckSum;
+  }
+
   public handleOutgoing(packet: BasePacket) {
     if (!packet.payload) {
       throw new Error('Payload can not be empty');
@@ -54,12 +105,14 @@ export class TransportLayer {
         );
         let newSegmentPacket = new BasePacket();
         newSegmentPacket.setPayload(currentSegmentData);
-
         this.addBaseSegmentHeaders(packet, newSegmentPacket);
+        const checkSum = this.calCheckSum(newSegmentPacket, currentSegmentData);
+
         newSegmentPacket.addHeader(LayerLevel.TRANSPORT, {
           underlyingProtocol: this.underlyingProtocol,
           srcPort: this.srcPort,
           destPort: this.destPort,
+          checkSum: checkSum,
           segmentIndex: i,
           totalSegment: noOfSegments,
         });
@@ -69,14 +122,18 @@ export class TransportLayer {
           direction: PacketDirection.SENDER_TO_RECEIVER,
           status: PacketStatus.HEALTHY,
         };
+
         console.log(JSON.stringify(newSegmentPacket, null, 2));
         this.nextLayer.handleOutgoing(newSegmentPacket);
       }
     } else {
+      const checkSum = this.calCheckSum(packet, packet.payload);
+
       packet.addHeader(LayerLevel.TRANSPORT, {
         underlyingProtocol: this.underlyingProtocol,
         srcPort: this.srcPort,
         destPort: this.destPort,
+        checkSum: checkSum,
         segmentIndex: this.segmentIndex,
         totalSegment: this.totalSegment,
       });

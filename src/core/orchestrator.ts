@@ -16,6 +16,7 @@ export class Orchestrator {
         {
           srcPort: 80,
           destPort: 120,
+          checkSum: 0,
           segmentIndex: 0,
           totalSegment: 0,
           underlyingProtocol: 'TCP',

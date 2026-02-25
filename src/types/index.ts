@@ -62,6 +62,7 @@ export interface TransportLayerData {
   underlyingProtocol: string;
   srcPort: number;
   destPort: number;
+  checkSum?: number;
   segmentIndex: number;
   totalSegment: number;
 }
