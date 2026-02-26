@@ -38,13 +38,22 @@ export class TransportLayer {
   }
 
   private extractTransportLayerHeaders(packet: BasePacket): TransportLayerData {
-    const transportLayerData = packet.headers[1].data as TransportLayerData;
+    const transportHeader = packet.headers.find(
+      (header) => header.layerName === LayerLevel.TRANSPORT,
+    );
+
+    if (!transportHeader) {
+      throw new Error('Transport layer header not found in packet.');
+    }
+
+    const data = transportHeader.data as TransportLayerData;
+
     const transportLayerHeaders = {
-      underlyingProtocol: transportLayerData.underlyingProtocol,
-      srcPort: transportLayerData.srcPort,
-      destPort: transportLayerData.destPort,
-      segmentIndex: transportLayerData.segmentIndex,
-      totalSegment: transportLayerData.totalSegment,
+      underlyingProtocol: data.underlyingProtocol,
+      srcPort: data.srcPort,
+      destPort: data.destPort,
+      segmentIndex: data.segmentIndex,
+      totalSegment: data.totalSegment,
     };
     return transportLayerHeaders;
   }
