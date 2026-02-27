@@ -1,6 +1,7 @@
 import { ApplicationLayer } from '../layers/applicationLayer_7';
-import { NetworkLayer } from '../layers/networkLayer';
+import { NetworkLayer } from '../layers/networkLayer_3';
 import { TransportLayer } from '../layers/transportLayer_4';
+import { PhysicalLayer } from '../layers/physicalLayer_1';
 import { BasePacket } from './Packet';
 
 export class Orchestrator {
@@ -21,7 +22,15 @@ export class Orchestrator {
           totalSegment: 0,
           underlyingProtocol: 'TCP',
         },
-        new NetworkLayer(),
+        new NetworkLayer(
+          {
+            srcIp: '192.0.2.45',
+            destIp: '192.0.2.45',
+            ttl: 64,
+            protocol: 6,
+          },
+          new PhysicalLayer(),
+        ),
       ),
     );
   }

@@ -41,6 +41,24 @@ export class BasePacket {
     this.payload = payload;
   }
 
+  // For getting the payLoadSize Gradually
+  public getPayloadSize(): number {
+    if (!this.payload) {
+      throw new Error('Payload does not exists');
+    }
+    return this.payload.length + this.headers.length;
+  }
+
+  // For cloning the Packet
+  public clone(): BasePacket {
+    const newPacket = new BasePacket();
+    newPacket.payload = this.payload;
+    newPacket.headers = [...this.headers];
+    newPacket.metadata = { ...this.metadata };
+    newPacket.logHistory = [...this.logHistory];
+    return newPacket;
+  }
+
   // Generic header attachment API
   public addHeader(layerName: LayerLevel, data: LayerData): void {
     const header: Header = {

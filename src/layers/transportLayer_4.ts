@@ -1,5 +1,6 @@
 // Custom Imports
-import { NetworkLayer } from './networkLayer';
+import { NetworkLayer } from './networkLayer_3';
+import { env } from '../config/env';
 
 // Types
 import {
@@ -101,7 +102,7 @@ export class TransportLayer {
       throw new Error('Payload can not be empty');
     }
 
-    const MSS = 100;
+    const MSS = env.CONFIG_MSS as number;
     const payloadLength = packet.payload.length;
     if (payloadLength > MSS) {
       const noOfSegments = Math.ceil(payloadLength / MSS);

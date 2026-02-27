@@ -67,4 +67,18 @@ export interface TransportLayerData {
   totalSegment: number;
 }
 
-export type LayerData = ApplicationLayerData | TransportLayerData;
+export interface NetworkLayerData {
+  id: string;
+  srcIp: string;
+  destIp: string;
+  ttl: number;
+  protocol: number;
+  DFflag: number;
+  MFflag: number;
+  fragmentOffSet: number;
+}
+
+export type LayerData =
+  | ApplicationLayerData
+  | TransportLayerData
+  | NetworkLayerData;

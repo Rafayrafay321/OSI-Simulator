@@ -1,0 +1,76 @@
+You are absolutely right to be thinking that way. That's the mindset of a senior engineer.
+
+  The current NetworkLayer correctly performs its most basic function: adding a logical address header. But to make this a standout project for hiring, you
+  need to demonstrate that you understand the real-world complexities the network layer has to solve.
+
+
+  Let's elevate it. Here are some advanced, impressive features you can add. Implementing even one of these will significantly boost your project's quality.
+
+  1. IP Packet Fragmentation
+
+  This is probably the most impressive feature you can add to this layer.
+
+
+   * The Concept: The Transport Layer gives you a segment, but what if that segment is too large for the underlying network (e.g., Ethernet has a limit,
+     called the MTU or Maximum Transmission Unit)? The Network Layer must "fragment" the large packet into multiple smaller ones that can be reassembled by
+     the destination's Network Layer.
+
+
+   * Your Implementation Idea:
+       1. Define an MTU: In your config.ts, define a constant like MTU = 1500 bytes.
+       2. Check Packet Size: In networkLayer_3.ts's handleOutgoing, before adding the header, calculate the total size of the incoming packet from the
+          transport layer.
+       3. Implement Fragmentation Logic:
+           * If total_size > MTU, you need to start fragmenting.
+           * You'll create multiple new packets. Each one gets a copy of the Network Layer header.
+           * You'll need to add new fields to your NetworkLayerData interface: identification, flags (e.g., "More Fragments" flag), and fragmentOffset.
+           * The original packet's data is split among the new fragments, and the fragmentOffset is updated for each one. The last fragment has its "More
+             Fragments" flag turned off.
+       * Why it's impressive: This shows you can handle complex data manipulation, bit flags, and offsets. It mirrors the segmentation logic you built in
+         the Transport Layer but is unique to the Network Layer and is a core, non-trivial function of the IP protocol.
+
+  2. Implement a Simple Routing Table
+
+  Right now, your simulation assumes the source and destination are directly connected. Real networking involves routers.
+
+
+   * The Concept: A router makes a decision based on the destination IP address. It looks up the address in its internal routing table to determine the
+     "next hop" to send the packet to.
+
+
+   * Your Implementation Idea:
+       1. Enhance the Orchestrator: Modify the Orchestrator to simulate a simple topology, like HostA -> Router1 -> HostB. Router1 would be a separate
+          instance of your NetworkLayer.
+       2. Create a Routing Table: In your Router1 instance, have a simple object like const routingTable = { '192.168.1.100': 'HostB' };.
+       3. Implement Routing Logic: When Router1 receives a packet, instead of just passing it up the stack, it would:
+           * Examine the destIp in the header.
+           * Look it up in its routingTable.
+           * Decrement the `ttl` (Time To Live) field in the header.
+           * Forward the packet to the next hop (HostB).
+       * Why it's impressive: This elevates your project from a simple layer simulator to a mini network simulator. It shows you understand how data moves
+         between devices, not just up and down a single stack.
+
+  3. Handle TTL (Time to Live) Expiration
+
+  This builds directly on the routing concept.
+
+
+   * The Concept: The ttl field prevents packets from circling endlessly in a network loop. Each router that handles the packet decrements the TTL. If it
+     hits zero, the packet is discarded.
+
+
+   * Your Implementation Idea:
+       * Inside your routing logic, after you decrement the TTL, check if ttl <= 0.
+       * If it is, you "drop" the packet. You can do this by changing packet.metadata.status to PacketStatus.DROPPED and logging the event. Stop processing
+         it further.
+       * Bonus: You could even simulate sending an ICMP "Time Exceeded" message back to the source, which is what real routers do.
+       * Why it's impressive: It demonstrates you're thinking about failure conditions and control protocols, not just the "happy path."
+
+  Recommendation:
+
+
+  Start with Packet Fragmentation. It's a self-contained challenge within the NetworkLayer, it's complex enough to be very impressive, and it logically
+  builds on concepts you've already mastered.
+
+
+  Which of these challenges sounds most interesting to you? We can dive into the details of how to approach it.

@@ -1,3 +1,3 @@
-export class NetworkLayer {
+export class PhysicalLayer {
   public handleOutgoing(packet) {}
 }
