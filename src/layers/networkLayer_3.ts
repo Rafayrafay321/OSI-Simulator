@@ -22,9 +22,14 @@ export class NetworkLayer {
   public DFflag: number;
   public MFflag: number;
   public fragmentOffSet: number;
+  public routingTable?: Map<string, NetworkLayer>;
   private nextLayer: PhysicalLayer;
 
-  constructor(options: NetworkLayerData, nextLayer: PhysicalLayer) {
+  constructor(
+    options: NetworkLayerData,
+    nextLayer: PhysicalLayer,
+    routingTable?: Map<string, NetworkLayer>,
+  ) {
     this.id = options.id;
     this.srcIp = options.srcIp;
     this.destIp = options.destIp;
@@ -33,6 +38,7 @@ export class NetworkLayer {
     this.DFflag = options.DFflag;
     this.MFflag = options.MFflag;
     this.fragmentOffSet = options.fragmentOffSet;
+    this.routingTable = routingTable;
     this.nextLayer = nextLayer;
   }
   public handleOutgoing(packet: BasePacket) {

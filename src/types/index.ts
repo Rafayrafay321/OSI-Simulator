@@ -26,6 +26,7 @@ export enum LayerLevel {
 export interface PacketMetaData {
   currentLayer: LayerLevel;
   direction: PacketDirection;
+  destinationIp?: string;
   status: PacketStatus;
 }
 
