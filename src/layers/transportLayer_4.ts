@@ -9,7 +9,6 @@ import {
   LayerLevel,
   PacketDirection,
   Header,
-  LayerData,
 } from '../types';
 import { BasePacket } from '../core/Packet';
 
@@ -109,11 +108,11 @@ export class TransportLayer {
       for (let i = 0; i < noOfSegments; i++) {
         const startingIndex = i * MSS;
         const endingIndex = Math.min(startingIndex + MSS, payloadLength);
-        let currentSegmentData = packet.payload.substring(
+        const currentSegmentData = packet.payload.substring(
           startingIndex,
           endingIndex,
         );
-        let newSegmentPacket = new BasePacket();
+        const newSegmentPacket = new BasePacket();
         newSegmentPacket.setPayload(currentSegmentData);
         this.addBaseSegmentHeaders(packet, newSegmentPacket);
         const checkSum = this.calCheckSum(newSegmentPacket, currentSegmentData);
