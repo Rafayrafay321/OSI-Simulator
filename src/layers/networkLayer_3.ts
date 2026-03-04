@@ -1,7 +1,7 @@
 // Node imports
 import crypto from 'node:crypto';
 // Custom Imports
-import { PhysicalLayer } from './physicalLayer_1';
+import { DataLinkLayer } from './dataLinkLayer_2';
 import { env } from '../config/env';
 
 // Types and interfaces
@@ -23,11 +23,11 @@ export class NetworkLayer {
   public MFflag: number;
   public fragmentOffSet: number;
   public routingTable?: Map<string, NetworkLayer>;
-  private nextLayer: PhysicalLayer;
+  private nextLayer: DataLinkLayer;
 
   constructor(
     options: NetworkLayerData,
-    nextLayer: PhysicalLayer,
+    nextLayer: DataLinkLayer,
     routingTable?: Map<string, NetworkLayer>,
   ) {
     this.id = options.id;

@@ -9,7 +9,6 @@ import {
   LayerLevel,
   PacketDirection,
   Header,
-  LayerData,
 } from '../types';
 import { BasePacket } from '../core/Packet';
 
@@ -59,28 +58,12 @@ export class TransportLayer {
     return transportLayerHeaders;
   }
 
-  private to16BitChuck(data: string): number[] {
-    const encoder = new TextEncoder();
-    // Convert string into bytes before bits.
-    const databytes = encoder.encode(data);
-
-    // Divide into 16 bit chucks
-    const chuncks: number[] = [];
-    for (let i = 0; i < databytes.length; i += 2) {
-      const high = databytes[i];
-      const low = databytes[i + 1] ?? 0;
-
-      const chunck16 = (high << 8) | low;
-      chuncks.push(chunck16);
-    }
-    return chuncks;
-  }
   private calCheckSum(packet: BasePacket, paylaod: string) {
     const transportHeaders = this.extractTransportLayerHeaders(packet);
     const allChunks: number[] = [
-      ...this.to16BitChuck(paylaod),
+      ...packet.to16BitChuck(paylaod),
       ...Object.values(transportHeaders).flatMap((header) =>
-        this.to16BitChuck(header),
+        packet.to16BitChuck(header),
       ),
     ];
 
@@ -109,11 +92,11 @@ export class TransportLayer {
       for (let i = 0; i < noOfSegments; i++) {
         const startingIndex = i * MSS;
         const endingIndex = Math.min(startingIndex + MSS, payloadLength);
-        let currentSegmentData = packet.payload.substring(
+        const currentSegmentData = packet.payload.substring(
           startingIndex,
           endingIndex,
         );
-        let newSegmentPacket = new BasePacket();
+        const newSegmentPacket = new BasePacket();
         newSegmentPacket.setPayload(currentSegmentData);
         this.addBaseSegmentHeaders(packet, newSegmentPacket);
         const checkSum = this.calCheckSum(newSegmentPacket, currentSegmentData);

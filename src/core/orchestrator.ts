@@ -1,6 +1,7 @@
 import { ApplicationLayer } from '../layers/applicationLayer_7';
-import { NetworkLayer } from '../layers/networkLayer_3';
 import { TransportLayer } from '../layers/transportLayer_4';
+import { NetworkLayer } from '../layers/networkLayer_3';
+import { DataLinkLayer } from '../layers/dataLinkLayer_2';
 import { PhysicalLayer } from '../layers/physicalLayer_1';
 import { BasePacket } from './Packet';
 
@@ -11,6 +12,10 @@ export class Orchestrator {
   public hostBNetworkLayer: NetworkLayer;
   public router: NetworkLayer;
   constructor() {
+    const macAddressRegistry = new Map<string, string>();
+    macAddressRegistry.set('192.168.1.10', '02:A1:C3:54:7B:9D'); // Host A
+    macAddressRegistry.set('192.168.2.10', '0E:88:2F:C1:B9:44'); // Host B
+
     // Host A instance
     this.host_A = new ApplicationLayer(
       {
@@ -38,7 +43,14 @@ export class Orchestrator {
             MFflag: 1,
             fragmentOffSet: 100,
           },
-          new PhysicalLayer(),
+          new DataLinkLayer(
+            {
+              srcMac: '02:A1:C3:54:7B:9D',
+              etherType: 80000,
+            },
+            new PhysicalLayer(),
+            macAddressRegistry,
+          ),
         )),
       ),
     );
@@ -70,13 +82,21 @@ export class Orchestrator {
             MFflag: 1,
             fragmentOffSet: 100,
           },
-          new PhysicalLayer(),
+          new DataLinkLayer(
+            {
+              srcMac: '02:A1:C3:54:7B:9D',
+              etherType: 80000,
+            },
+            new PhysicalLayer(),
+            macAddressRegistry,
+          ),
         )),
       ),
     );
     const routingTable = new Map<string, NetworkLayer>();
     routingTable.set('192.168.1.10', this.hostANetworkLayer);
     routingTable.set('192.168.2.10', this.hostBNetworkLayer);
+
     // Router Instance
     this.router = new NetworkLayer(
       {
@@ -89,7 +109,14 @@ export class Orchestrator {
         MFflag: 1,
         fragmentOffSet: 100,
       },
-      new PhysicalLayer(),
+      new DataLinkLayer(
+        {
+          srcMac: '02:A1:C3:54:7B:9D',
+          etherType: 80000,
+        },
+        new PhysicalLayer(),
+        macAddressRegistry,
+      ),
       routingTable,
     );
   }
