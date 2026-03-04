@@ -79,10 +79,16 @@ export interface NetworkLayerData {
   fragmentOffSet: number;
 }
 
+export interface DataLinkLayerOptions {
+  srcMac: string;
+  etherType: number;
+}
+
 export interface DataLinkLayerData {
-  sourceMac: string;
-  destinationMac: string;
-  fcs: number;
+  srcMac: string;
+  destMac: string;
+  etherType: number;
+  trailer: number;
 }
 export type LayerData =
   | ApplicationLayerData
