@@ -1,5 +1,6 @@
 // Custom Imports
 import { PhysicalLayer } from './physicalLayer_1';
+import { Logger } from '../core/Logger';
 
 // Types
 import { DataLinkLayerData, LayerLevel, DataLinkLayerOptions } from '../types';
@@ -10,16 +11,19 @@ export class DataLinkLayer {
   public etherType: number;
   private nextLayer: PhysicalLayer;
   private arpCache: Map<string, string>;
+  private logger: Logger;
 
   constructor(
     options: DataLinkLayerOptions,
     nextLayer: PhysicalLayer,
     arpCache: Map<string, string>,
+    logger: Logger,
   ) {
     this.srcMac = options.srcMac;
     this.etherType = options.etherType;
     this.nextLayer = nextLayer;
     this.arpCache = arpCache;
+    this.logger = logger;
   }
 
   private calCheckSum(
@@ -47,19 +51,36 @@ export class DataLinkLayer {
 
   public handleOutgoing(packet: BasePacket) {
     if (!packet.payload) {
+      this.logger.log('DataLinkLayer', 'Payload can not be empty', 'ERROR');
       throw new Error('Payload can not be empty');
     }
 
     if (!packet.metadata.destinationIp) {
+      this.logger.log(
+        'DataLinkLayer',
+        'Destination IP address can not be empty',
+        'ERROR',
+      );
       throw new Error('Destination IP address can not be empty');
     }
 
+    this.logger.log('DataLinkLayer', 'Handling outgoing packet.');
     const destIp = packet.metadata.destinationIp;
     const destMac = this.arpCache.get(destIp);
 
     if (!destMac) {
-      throw new Error(`Ip: ${destIp} has na Mac Address`);
+      this.logger.log(
+        'DataLinkLayer',
+        `MAC address for IP ${destIp} not found in ARP cache.`,
+        'ERROR',
+      );
+      throw new Error(`Ip: ${destIp} has no Mac Address`);
     }
+
+    this.logger.log(
+      'DataLinkLayer',
+      `Found MAC address ${destMac} for IP ${destIp}.`,
+    );
 
     const checkSum = this.calCheckSum(
       { srcMac: this.srcMac, etherType: this.etherType },
@@ -76,6 +97,12 @@ export class DataLinkLayer {
     });
 
     packet.metadata.currentLayer = LayerLevel.DATA_LINK;
+    this.logger.log('DataLinkLayer', 'Passing packet to Physical Layer.');
     this.nextLayer.handleOutgoing(packet);
+  }
+
+  public handleIncoming(packet: BasePacket) {
+    this.logger.log('DataLinkLayer', 'Handling incoming packet.');
+    // TODO: Implement incoming logic for DataLinkLayer
   }
 }

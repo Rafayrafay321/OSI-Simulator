@@ -2,21 +2,32 @@
 import { BasePacket } from '../core/Packet';
 import { ApplicationLayerData, LayerLevel } from '../types';
 import { TransportLayer } from './transportLayer_4';
+import { Logger } from '../core/Logger';
 
 export class ApplicationLayer {
   public protocol: string;
   public method: string;
   public sender: string;
   private nextLayer: TransportLayer;
+  private logger: Logger;
 
-  constructor(options: ApplicationLayerData, nextLayer: TransportLayer) {
+  constructor(
+    options: ApplicationLayerData,
+    nextLayer: TransportLayer,
+    logger: Logger,
+  ) {
     this.protocol = options.protocol;
     this.method = options.method;
     this.sender = options.sender;
     this.nextLayer = nextLayer;
+    this.logger = logger;
   }
   // TODO Add validation for payload.
   handleOutgoing = (packet: BasePacket, payload: string): void => {
+    this.logger.log(
+      'ApplicationLayer',
+      `Sending payload: ${payload.substring(0, 30)}...`,
+    );
     packet.setPayload(payload);
     packet.addHeader(LayerLevel.APPLICATION, {
       protocol: this.protocol,
@@ -26,5 +37,13 @@ export class ApplicationLayer {
 
     this.nextLayer.handleOutgoing(packet);
   };
-  handleIncomming = (packet: BasePacket) => {};
+  handleIncomming = (packet: BasePacket) => {
+    const header = packet.getHeader(LayerLevel.APPLICATION);
+    if (header) {
+      this.logger.log(
+        'ApplicationLayer',
+        `Received payload: ${packet.getPayload().substring(0, 30)}...`,
+      );
+    }
+  };
 }

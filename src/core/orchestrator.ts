@@ -4,6 +4,7 @@ import { NetworkLayer } from '../layers/networkLayer_3';
 import { DataLinkLayer } from '../layers/dataLinkLayer_2';
 import { PhysicalLayer } from '../layers/physicalLayer_1';
 import { BasePacket } from './Packet';
+import { Logger } from './Logger';
 
 export class Orchestrator {
   public host_A: ApplicationLayer;
@@ -11,7 +12,10 @@ export class Orchestrator {
   public hostANetworkLayer: NetworkLayer;
   public hostBNetworkLayer: NetworkLayer;
   public router: NetworkLayer;
-  constructor() {
+  private logger: Logger;
+
+  constructor(logger: Logger) {
+    this.logger = logger;
     const macAddressRegistry = new Map<string, string>();
     macAddressRegistry.set('192.168.1.10', '02:A1:C3:54:7B:9D'); // Host A
     macAddressRegistry.set('192.168.2.10', '0E:88:2F:C1:B9:44'); // Host B
@@ -48,11 +52,15 @@ export class Orchestrator {
               srcMac: '02:A1:C3:54:7B:9D',
               etherType: 80000,
             },
-            new PhysicalLayer(),
+            new PhysicalLayer(this.logger),
             macAddressRegistry,
+            this.logger
           ),
+          this.logger
         )),
+        this.logger
       ),
+      this.logger
     );
 
     // Host B instance
@@ -87,11 +95,15 @@ export class Orchestrator {
               srcMac: '02:A1:C3:54:7B:9D',
               etherType: 80000,
             },
-            new PhysicalLayer(),
+            new PhysicalLayer(this.logger),
             macAddressRegistry,
+            this.logger
           ),
+          this.logger
         )),
+        this.logger
       ),
+      this.logger
     );
     const routingTable = new Map<string, NetworkLayer>();
     routingTable.set('192.168.1.10', this.hostANetworkLayer);
@@ -114,17 +126,21 @@ export class Orchestrator {
           srcMac: '02:A1:C3:54:7B:9D',
           etherType: 80000,
         },
-        new PhysicalLayer(),
+        new PhysicalLayer(this.logger),
         macAddressRegistry,
+        this.logger
       ),
-      routingTable,
+      this.logger,
+      routingTable
     );
   }
 
   public start(payload: string): void {
+    this.logger.log('Orchestrator', 'Starting simulation...');
     const packet = new BasePacket();
     packet.metadata.destinationIp = '192.168.2.10';
     this.host_A.handleOutgoing(packet, payload);
+    this.logger.log('Orchestrator', 'Simulation finished.');
     return;
   }
 }

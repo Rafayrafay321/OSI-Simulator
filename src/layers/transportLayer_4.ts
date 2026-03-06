@@ -1,6 +1,7 @@
 // Custom Imports
 import { NetworkLayer } from './networkLayer_3';
 import { env } from '../config/env';
+import { Logger } from '../core/Logger';
 
 // Types
 import {
@@ -19,14 +20,20 @@ export class TransportLayer {
   public segmentIndex: number;
   public totalSegment: number;
   private nextLayer: NetworkLayer;
+  private logger: Logger;
 
-  constructor(options: TransportLayerData, nextLayer: NetworkLayer) {
+  constructor(
+    options: TransportLayerData,
+    nextLayer: NetworkLayer,
+    logger: Logger,
+  ) {
     this.underlyingProtocol = options.underlyingProtocol;
     this.srcPort = options.srcPort;
     this.destPort = options.destPort;
     this.segmentIndex = options.segmentIndex;
     this.totalSegment = options.totalSegment;
     this.nextLayer = nextLayer;
+    this.logger = logger;
   }
   // Helper method for copying Headers
   private addBaseSegmentHeaders(
@@ -82,13 +89,20 @@ export class TransportLayer {
 
   public handleOutgoing(packet: BasePacket) {
     if (!packet.payload) {
+      this.logger.log('TransportLayer', 'Payload can not be empty', 'ERROR');
       throw new Error('Payload can not be empty');
     }
+
+    this.logger.log('TransportLayer', 'Handling outgoing packet.');
 
     const MSS = env.CONFIG_MSS as number;
     const payloadLength = packet.payload.length;
     if (payloadLength > MSS) {
       const noOfSegments = Math.ceil(payloadLength / MSS);
+      this.logger.log(
+        'TransportLayer',
+        `Payload > MSS. Segmenting into ${noOfSegments} segments.`,
+      );
       for (let i = 0; i < noOfSegments; i++) {
         const startingIndex = i * MSS;
         const endingIndex = Math.min(startingIndex + MSS, payloadLength);
@@ -115,8 +129,10 @@ export class TransportLayer {
           direction: PacketDirection.SENDER_TO_RECEIVER,
           status: PacketStatus.HEALTHY,
         };
-
-        console.log(JSON.stringify(newSegmentPacket, null, 2));
+        this.logger.log(
+          'TransportLayer',
+          `Passing segment ${i + 1} to Network Layer.`,
+        );
         this.nextLayer.handleOutgoing(newSegmentPacket);
       }
     } else {
@@ -136,8 +152,13 @@ export class TransportLayer {
         direction: PacketDirection.SENDER_TO_RECEIVER,
         status: PacketStatus.HEALTHY,
       };
-      console.log(JSON.stringify(packet, null, 2));
+      this.logger.log('TransportLayer', 'Passing packet to Network Layer.');
       this.nextLayer.handleOutgoing(packet);
     }
+  }
+
+  public handleIncoming(packet: BasePacket) {
+    this.logger.log('TransportLayer', 'Handling incoming packet.');
+    // TODO: Implement incoming logic for Transport Layer
   }
 }

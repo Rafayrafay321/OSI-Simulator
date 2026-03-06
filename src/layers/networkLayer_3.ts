@@ -3,6 +3,7 @@ import crypto from 'node:crypto';
 // Custom Imports
 import { DataLinkLayer } from './dataLinkLayer_2';
 import { env } from '../config/env';
+import { Logger } from '../core/Logger';
 
 // Types and interfaces
 import {
@@ -24,10 +25,12 @@ export class NetworkLayer {
   public fragmentOffSet: number;
   public routingTable?: Map<string, NetworkLayer>;
   private nextLayer: DataLinkLayer;
+  private logger: Logger;
 
   constructor(
     options: NetworkLayerData,
     nextLayer: DataLinkLayer,
+    logger: Logger,
     routingTable?: Map<string, NetworkLayer>,
   ) {
     this.id = options.id;
@@ -40,12 +43,15 @@ export class NetworkLayer {
     this.fragmentOffSet = options.fragmentOffSet;
     this.routingTable = routingTable;
     this.nextLayer = nextLayer;
+    this.logger = logger;
   }
   public handleOutgoing(packet: BasePacket) {
     if (!packet.payload) {
+      this.logger.log('NetworkLayer', 'Payload can not be empty', 'ERROR');
       throw new Error('Payload can not be empty');
     }
 
+    this.logger.log('NetworkLayer', 'Handling outgoing packet.');
     const MTU = Number(env.CONFIG_MTU);
     const ipHeaderSize = Number(env.IP_HEADER_SIZE);
     const payloadSize = packet.getPayloadSize();
@@ -55,6 +61,10 @@ export class NetworkLayer {
       const MaxFragmentData = MTU - ipHeaderSize;
       const noOfFragments = Math.ceil(payloadSize / MTU);
       const newFragmentId = crypto.randomUUID();
+      this.logger.log(
+        'NetworkLayer',
+        `Packet > MTU. Fragmenting into ${noOfFragments} fragments.`,
+      );
 
       for (let i = 0; i < noOfFragments; i++) {
         const lowerIndex = MaxFragmentData * i;
@@ -84,8 +94,10 @@ export class NetworkLayer {
           direction: PacketDirection.SENDER_TO_RECEIVER,
           status: PacketStatus.HEALTHY,
         };
-
-        console.log(JSON.stringify(newFragmentPacket, null, 2));
+        this.logger.log(
+          'NetworkLayer',
+          `Passing fragment ${i + 1} to Data Link Layer.`,
+        );
         this.nextLayer.handleOutgoing(newFragmentPacket);
       }
     } else {
@@ -105,8 +117,13 @@ export class NetworkLayer {
         direction: PacketDirection.SENDER_TO_RECEIVER,
         status: PacketStatus.HEALTHY,
       };
-      console.log(JSON.stringify(packet, null, 2));
+      this.logger.log('NetworkLayer', 'Passing packet to Data Link Layer.');
       this.nextLayer.handleOutgoing(packet);
     }
+  }
+
+  public handleIncoming(packet: BasePacket) {
+    this.logger.log('NetworkLayer', 'Handling incoming packet.');
+    // TODO: Implement incoming logic for Network Layer
   }
 }
