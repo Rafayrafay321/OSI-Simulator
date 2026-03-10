@@ -11,6 +11,7 @@ import {
   NetworkLayerData,
   PacketStatus,
   PacketDirection,
+  LogLevel,
 } from '../types';
 import { BasePacket } from '../core/Packet';
 
@@ -47,11 +48,19 @@ export class NetworkLayer {
   }
   public handleOutgoing(packet: BasePacket) {
     if (!packet.payload) {
-      this.logger.log('NetworkLayer', 'Payload can not be empty', 'ERROR');
+      this.logger.log(
+      LayerLevel.NETWORK,
+      'Payload can not be empty',
+      LogLevel.ERROR,
+    );
       throw new Error('Payload can not be empty');
     }
 
-    this.logger.log('NetworkLayer', 'Handling outgoing packet.');
+    this.logger.log(
+      LayerLevel.NETWORK,
+      'Handling outgoing packet.',
+      LogLevel.INFO,
+    );
     const MTU = Number(env.CONFIG_MTU);
     const ipHeaderSize = Number(env.IP_HEADER_SIZE);
     const payloadSize = packet.getPayloadSize();
@@ -62,8 +71,9 @@ export class NetworkLayer {
       const noOfFragments = Math.ceil(payloadSize / MTU);
       const newFragmentId = crypto.randomUUID();
       this.logger.log(
-        'NetworkLayer',
+        LayerLevel.NETWORK,
         `Packet > MTU. Fragmenting into ${noOfFragments} fragments.`,
+        LogLevel.INFO,
       );
 
       for (let i = 0; i < noOfFragments; i++) {
@@ -95,8 +105,9 @@ export class NetworkLayer {
           status: PacketStatus.HEALTHY,
         };
         this.logger.log(
-          'NetworkLayer',
+          LayerLevel.NETWORK,
           `Passing fragment ${i + 1} to Data Link Layer.`,
+          LogLevel.INFO,
         );
         this.nextLayer.handleOutgoing(newFragmentPacket);
       }
@@ -117,13 +128,21 @@ export class NetworkLayer {
         direction: PacketDirection.SENDER_TO_RECEIVER,
         status: PacketStatus.HEALTHY,
       };
-      this.logger.log('NetworkLayer', 'Passing packet to Data Link Layer.');
+      this.logger.log(
+        LayerLevel.NETWORK,
+        'Passing packet to Data Link Layer.',
+        LogLevel.INFO,
+      );
       this.nextLayer.handleOutgoing(packet);
     }
   }
 
   public handleIncoming(packet: BasePacket) {
-    this.logger.log('NetworkLayer', 'Handling incoming packet.');
+    this.logger.log(
+      LayerLevel.NETWORK,
+      'Handling incoming packet.',
+      LogLevel.INFO,
+    );
     // TODO: Implement incoming logic for Network Layer
   }
 }

@@ -1,15 +1,10 @@
-// Interface for logging the packet.
-export interface LogEntry {
-  timestamp: string;
-  message: string;
-  layer: string;
-  type: 'INFO' | 'SUCCESS' | 'ERROR';
-}
+// Types
+import { LayerLevel, LogEntry, LogLevel } from '../types';
 
 export class Logger {
   private logs: LogEntry[] = [];
 
-  public log(layer: string, message: string, type: 'INFO' | 'SUCCESS' | 'ERROR' = 'INFO'): void {
+  public log(layer: LayerLevel, message: string, type: LogLevel): void {
     const entry: LogEntry = {
       timestamp: new Date().toISOString(),
       layer,
@@ -17,7 +12,9 @@ export class Logger {
       type,
     };
     this.logs.push(entry);
-    console.log(`[${entry.timestamp}] [${entry.layer}] [${entry.type}] ${entry.message}`);
+    console.log(
+      `[${entry.timestamp}] [${entry.layer}] [${entry.type}] ${entry.message}`,
+    );
   }
 
   public getLogs(): LogEntry[] {

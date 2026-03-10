@@ -1,6 +1,6 @@
 // Custom Import
 import { BasePacket } from '../core/Packet';
-import { ApplicationLayerData, LayerLevel } from '../types';
+import { ApplicationLayerData, LayerLevel, LogLevel } from '../types';
 import { TransportLayer } from './transportLayer_4';
 import { Logger } from '../core/Logger';
 
@@ -25,8 +25,9 @@ export class ApplicationLayer {
   // TODO Add validation for payload.
   handleOutgoing = (packet: BasePacket, payload: string): void => {
     this.logger.log(
-      'ApplicationLayer',
+      LayerLevel.APPLICATION,
       `Sending payload: ${payload.substring(0, 30)}...`,
+      LogLevel.INFO,
     );
     packet.setPayload(payload);
     packet.addHeader(LayerLevel.APPLICATION, {
@@ -41,8 +42,9 @@ export class ApplicationLayer {
     const header = packet.getHeader(LayerLevel.APPLICATION);
     if (header) {
       this.logger.log(
-        'ApplicationLayer',
+        LayerLevel.APPLICATION,
         `Received payload: ${packet.getPayload().substring(0, 30)}...`,
+        LogLevel.INFO,
       );
     }
   };

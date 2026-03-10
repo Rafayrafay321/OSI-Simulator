@@ -10,6 +10,7 @@ import {
   LayerLevel,
   PacketDirection,
   Header,
+  LogLevel,
 } from '../types';
 import { BasePacket } from '../core/Packet';
 
@@ -89,19 +90,28 @@ export class TransportLayer {
 
   public handleOutgoing(packet: BasePacket) {
     if (!packet.payload) {
-      this.logger.log('TransportLayer', 'Payload can not be empty', 'ERROR');
+      this.logger.log(
+      LayerLevel.TRANSPORT,
+      'Payload can not be empty',
+      LogLevel.ERROR,
+    );
       throw new Error('Payload can not be empty');
     }
 
-    this.logger.log('TransportLayer', 'Handling outgoing packet.');
+    this.logger.log(
+      LayerLevel.TRANSPORT,
+      'Handling outgoing packet.',
+      LogLevel.INFO,
+    );
 
     const MSS = env.CONFIG_MSS as number;
     const payloadLength = packet.payload.length;
     if (payloadLength > MSS) {
       const noOfSegments = Math.ceil(payloadLength / MSS);
       this.logger.log(
-        'TransportLayer',
+        LayerLevel.TRANSPORT,
         `Payload > MSS. Segmenting into ${noOfSegments} segments.`,
+        LogLevel.INFO,
       );
       for (let i = 0; i < noOfSegments; i++) {
         const startingIndex = i * MSS;
@@ -130,8 +140,9 @@ export class TransportLayer {
           status: PacketStatus.HEALTHY,
         };
         this.logger.log(
-          'TransportLayer',
+          LayerLevel.TRANSPORT,
           `Passing segment ${i + 1} to Network Layer.`,
+          LogLevel.INFO,
         );
         this.nextLayer.handleOutgoing(newSegmentPacket);
       }
@@ -152,13 +163,21 @@ export class TransportLayer {
         direction: PacketDirection.SENDER_TO_RECEIVER,
         status: PacketStatus.HEALTHY,
       };
-      this.logger.log('TransportLayer', 'Passing packet to Network Layer.');
+      this.logger.log(
+        LayerLevel.TRANSPORT,
+        'Passing packet to Network Layer.',
+        LogLevel.INFO,
+      );
       this.nextLayer.handleOutgoing(packet);
     }
   }
 
   public handleIncoming(packet: BasePacket) {
-    this.logger.log('TransportLayer', 'Handling incoming packet.');
+    this.logger.log(
+      LayerLevel.TRANSPORT,
+      'Handling incoming packet.',
+      LogLevel.INFO,
+    );
     // TODO: Implement incoming logic for Transport Layer
   }
 }

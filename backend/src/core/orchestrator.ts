@@ -5,6 +5,7 @@ import { DataLinkLayer } from '../layers/dataLinkLayer_2';
 import { PhysicalLayer } from '../layers/physicalLayer_1';
 import { BasePacket } from './Packet';
 import { Logger } from './Logger';
+import { LayerLevel, LogLevel } from '../types';
 
 export class Orchestrator {
   public host_A: ApplicationLayer;
@@ -136,11 +137,19 @@ export class Orchestrator {
   }
 
   public start(payload: string): void {
-    this.logger.log('Orchestrator', 'Starting simulation...');
+    this.logger.log(
+      LayerLevel.APPLICATION,
+      'Starting simulation...',
+      LogLevel.INFO,
+    );
     const packet = new BasePacket();
     packet.metadata.destinationIp = '192.168.2.10';
     this.host_A.handleOutgoing(packet, payload);
-    this.logger.log('Orchestrator', 'Simulation finished.');
+    this.logger.log(
+      LayerLevel.APPLICATION,
+      'Simulation finished.',
+      LogLevel.INFO,
+    );
     return;
   }
 }
