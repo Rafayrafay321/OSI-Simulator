@@ -7,7 +7,8 @@
     "rootDir": "src",
     "outDir": "dist",
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": ["jest", "node"] // Add this line
   },
-  "include": ["src"]
+  "include": ["src/**/*"] // Ensure it captures all subfolders
 }

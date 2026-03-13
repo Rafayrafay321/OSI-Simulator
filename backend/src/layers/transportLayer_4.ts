@@ -45,33 +45,15 @@ export class TransportLayer {
     newSegmentPacket.headers = [...addBaseSegmentPacketHeaders];
   }
 
-  private extractTransportLayerHeaders(packet: BasePacket): TransportLayerData {
-    const transportHeader = packet.headers.find(
-      (header) => header.layerName === LayerLevel.TRANSPORT,
-    );
-
-    if (!transportHeader) {
-      throw new Error('Transport layer header not found in packet.');
-    }
-
-    const data = transportHeader.data as TransportLayerData;
-
-    const transportLayerHeaders = {
-      underlyingProtocol: data.underlyingProtocol,
-      srcPort: data.srcPort,
-      destPort: data.destPort,
-      segmentIndex: data.segmentIndex,
-      totalSegment: data.totalSegment,
-    };
-    return transportLayerHeaders;
-  }
-
-  private calCheckSum(packet: BasePacket, paylaod: string) {
-    const transportHeaders = this.extractTransportLayerHeaders(packet);
+  private calCheckSum(
+    headerData: Omit<TransportLayerData, 'checkSum'>,
+    payload: string,
+    packet: BasePacket,
+  ) {
     const allChunks: number[] = [
-      ...packet.to16BitChuck(paylaod),
-      ...Object.values(transportHeaders).flatMap((header) =>
-        packet.to16BitChuck(header),
+      ...packet.to16BitChuck(payload),
+      ...Object.values(headerData).flatMap((header) =>
+        packet.to16BitChuck(String(header)),
       ),
     ];
 
@@ -91,10 +73,10 @@ export class TransportLayer {
   public handleOutgoing(packet: BasePacket) {
     if (!packet.payload) {
       this.logger.log(
-      LayerLevel.TRANSPORT,
-      'Payload can not be empty',
-      LogLevel.ERROR,
-    );
+        LayerLevel.TRANSPORT,
+        'Payload can not be empty',
+        LogLevel.ERROR,
+      );
       throw new Error('Payload can not be empty');
     }
 
@@ -123,15 +105,24 @@ export class TransportLayer {
         const newSegmentPacket = new BasePacket();
         newSegmentPacket.setPayload(currentSegmentData);
         this.addBaseSegmentHeaders(packet, newSegmentPacket);
-        const checkSum = this.calCheckSum(newSegmentPacket, currentSegmentData);
 
-        newSegmentPacket.addHeader(LayerLevel.TRANSPORT, {
+        const headerData: Omit<TransportLayerData, 'checkSum'> = {
           underlyingProtocol: this.underlyingProtocol,
           srcPort: this.srcPort,
           destPort: this.destPort,
-          checkSum: checkSum,
           segmentIndex: i,
           totalSegment: noOfSegments,
+        };
+
+        const checkSum = this.calCheckSum(
+          headerData,
+          currentSegmentData,
+          newSegmentPacket,
+        );
+
+        newSegmentPacket.addHeader(LayerLevel.TRANSPORT, {
+          ...headerData,
+          checkSum: checkSum,
         });
 
         newSegmentPacket.metadata = {
@@ -147,15 +138,18 @@ export class TransportLayer {
         this.nextLayer.handleOutgoing(newSegmentPacket);
       }
     } else {
-      const checkSum = this.calCheckSum(packet, packet.payload);
-
-      packet.addHeader(LayerLevel.TRANSPORT, {
+      const headerData: Omit<TransportLayerData, 'checkSum'> = {
         underlyingProtocol: this.underlyingProtocol,
         srcPort: this.srcPort,
         destPort: this.destPort,
-        checkSum: checkSum,
         segmentIndex: this.segmentIndex,
         totalSegment: this.totalSegment,
+      };
+      const checkSum = this.calCheckSum(headerData, packet.payload, packet);
+
+      packet.addHeader(LayerLevel.TRANSPORT, {
+        ...headerData,
+        checkSum: checkSum,
       });
 
       packet.metadata = {

@@ -39,13 +39,13 @@ export class ApplicationLayer {
     this.nextLayer.handleOutgoing(packet);
   };
   handleIncomming = (packet: BasePacket) => {
-    const header = packet.getHeader(LayerLevel.APPLICATION);
-    if (header) {
-      this.logger.log(
-        LayerLevel.APPLICATION,
-        `Received payload: ${packet.getPayload().substring(0, 30)}...`,
-        LogLevel.INFO,
-      );
-    }
+    // const header = packet.getHeader(LayerLevel.APPLICATION);
+    // if (header) {
+    //   this.logger.log(
+    //     LayerLevel.APPLICATION,
+    //     `Received payload: ${packet.getPayload().substring(0, 30)}...`,
+    //     LogLevel.INFO,
+    //   );
+    // }
   };
 }
