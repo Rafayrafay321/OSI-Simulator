@@ -49,13 +49,12 @@ export class NetworkLayer {
   public handleOutgoing(packet: BasePacket) {
     if (!packet.payload) {
       this.logger.log(
-      LayerLevel.NETWORK,
-      'Payload can not be empty',
-      LogLevel.ERROR,
-    );
+        LayerLevel.NETWORK,
+        'Payload can not be empty',
+        LogLevel.ERROR,
+      );
       throw new Error('Payload can not be empty');
     }
-
     this.logger.log(
       LayerLevel.NETWORK,
       'Handling outgoing packet.',
@@ -68,7 +67,7 @@ export class NetworkLayer {
 
     if (currentPacketSize > MTU) {
       const MaxFragmentData = MTU - ipHeaderSize;
-      const noOfFragments = Math.ceil(payloadSize / MTU);
+      const noOfFragments = Math.ceil(payloadSize / MaxFragmentData);
       const newFragmentId = crypto.randomUUID();
       this.logger.log(
         LayerLevel.NETWORK,
