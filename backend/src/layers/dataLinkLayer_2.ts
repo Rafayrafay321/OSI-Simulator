@@ -57,10 +57,10 @@ export class DataLinkLayer {
   public handleOutgoing(packet: BasePacket) {
     if (!packet.payload) {
       this.logger.log(
-      LayerLevel.DATA_LINK,
-      'Payload can not be empty',
-      LogLevel.ERROR,
-    );
+        LayerLevel.DATA_LINK,
+        'Payload can not be empty',
+        LogLevel.ERROR,
+      );
       throw new Error('Payload can not be empty');
     }
 

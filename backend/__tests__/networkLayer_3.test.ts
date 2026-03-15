@@ -70,7 +70,6 @@ describe('Network Layer Tests', () => {
   });
 
   it('Should throw an error if packet has no payload', () => {
-    // `mockPacket.payload` is already null from the factory, so no Arrange needed.
     expect(() => {
       networkLayer.handleOutgoing(mockPacket);
     }).toThrow('Payload can not be empty');

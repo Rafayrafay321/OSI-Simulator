@@ -8,8 +8,21 @@ export class PhysicalLayer {
   constructor(logger: Logger) {
     this.logger = logger;
   }
+  private serializePacket(packet: BasePacket): string {
+    // In a real implementation, this would convert the packet into a stream of bits.
+    return JSON.stringify(packet);
+  }
 
   public handleOutgoing(packet: BasePacket) {
+    if (!packet.payload) {
+      this.logger.log(
+        LayerLevel.DATA_LINK,
+        'Payload can not be empty',
+        LogLevel.ERROR,
+      );
+      throw new Error('Payload can not be empty');
+    }
+
     this.logger.log(
       LayerLevel.PHYSICAL,
       'Handling outgoing packet.',
@@ -38,10 +51,5 @@ export class PhysicalLayer {
       'Received raw data.',
       LogLevel.INFO,
     );
-  }
-
-  private serializePacket(packet: BasePacket): string {
-    // In a real implementation, this would convert the packet into a stream of bits.
-    return JSON.stringify(packet);
   }
 }
