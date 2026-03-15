@@ -55,13 +55,13 @@ export class Orchestrator {
             },
             new PhysicalLayer(this.logger),
             macAddressRegistry,
-            this.logger
+            this.logger,
           ),
-          this.logger
+          this.logger,
         )),
-        this.logger
+        this.logger,
       ),
-      this.logger
+      this.logger,
     );
 
     // Host B instance
@@ -98,13 +98,13 @@ export class Orchestrator {
             },
             new PhysicalLayer(this.logger),
             macAddressRegistry,
-            this.logger
+            this.logger,
           ),
-          this.logger
+          this.logger,
         )),
-        this.logger
+        this.logger,
       ),
-      this.logger
+      this.logger,
     );
     const routingTable = new Map<string, NetworkLayer>();
     routingTable.set('192.168.1.10', this.hostANetworkLayer);
@@ -129,10 +129,10 @@ export class Orchestrator {
         },
         new PhysicalLayer(this.logger),
         macAddressRegistry,
-        this.logger
+        this.logger,
       ),
       this.logger,
-      routingTable
+      routingTable,
     );
   }
 
