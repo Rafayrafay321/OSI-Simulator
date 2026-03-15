@@ -16,7 +16,8 @@ describe('Application Layer tests', () => {
   // 1. Remove Partial from the declarations
   let mockLogger: jest.Mocked<Logger>;
   let mockNextLayer: jest.Mocked<TransportLayer>;
-  let mockPacket: jest.Mocked<BasePacket>;
+  let mockOutgoingPacket: jest.Mocked<BasePacket>;
+  let mockIncommingPacket: jest.Mocked<BasePacket>;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -30,9 +31,13 @@ describe('Application Layer tests', () => {
       log: jest.fn(),
     } as unknown as jest.Mocked<Logger>;
 
-    mockPacket = {
+    mockOutgoingPacket = {
       setPayload: jest.fn(),
       addHeader: jest.fn(),
+    } as unknown as jest.Mocked<BasePacket>;
+
+    mockIncommingPacket = {
+      getPayload: jest.fn().mockReturnValue('Payload'),
     } as unknown as jest.Mocked<BasePacket>;
 
     applicationLayer = new ApplicationLayer(
@@ -46,25 +51,38 @@ describe('Application Layer tests', () => {
     );
   });
 
-  it('Should set the payload, add a header, and call next layer', () => {
-    const payload = 'Hello World';
+  describe('Application Layer HandleOutgoing', () => {
+    it('Should set the payload, add a header, and call next layer', () => {
+      const payload = 'Hello World';
 
-    applicationLayer.handleOutgoing(mockPacket, payload);
+      applicationLayer.handleOutgoing(mockOutgoingPacket, payload);
 
-    expect(mockPacket.setPayload).toHaveBeenCalled();
-    expect(mockPacket.setPayload).toHaveBeenCalledWith(payload);
+      expect(mockOutgoingPacket.setPayload).toHaveBeenCalled();
+      expect(mockOutgoingPacket.setPayload).toHaveBeenCalledWith(payload);
 
-    expect(mockPacket.addHeader).toHaveBeenCalled();
-    expect(mockPacket.addHeader).toHaveBeenCalledWith(LayerLevel.APPLICATION, {
-      protocol: 'HTTP',
-      method: 'GET',
-      sender: 'test',
+      expect(mockOutgoingPacket.addHeader).toHaveBeenCalled();
+      expect(mockOutgoingPacket.addHeader).toHaveBeenCalledWith(
+        LayerLevel.APPLICATION,
+        {
+          protocol: 'HTTP',
+          method: 'GET',
+          sender: 'test',
+        },
+      );
+
+      expect(mockNextLayer.handleOutgoing).toHaveBeenCalled();
+      expect(mockNextLayer.handleOutgoing).toHaveBeenCalledTimes(1);
+      expect(mockNextLayer.handleOutgoing).toHaveBeenCalledWith(
+        mockOutgoingPacket,
+      );
+
+      expect(mockLogger.log).toHaveBeenCalled();
     });
+  });
 
-    expect(mockNextLayer.handleOutgoing).toHaveBeenCalled();
-    expect(mockNextLayer.handleOutgoing).toHaveBeenCalledTimes(1);
-    expect(mockNextLayer.handleOutgoing).toHaveBeenCalledWith(mockPacket);
-
-    expect(mockLogger.log).toHaveBeenCalled();
+  describe('Application Layer HandleIncomming', () => {
+    it('Should extract the payload from incomming packet', () => {
+      // const payload: string;
+    });
   });
 });

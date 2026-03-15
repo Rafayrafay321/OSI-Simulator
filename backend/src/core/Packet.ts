@@ -58,6 +58,11 @@ export class BasePacket {
     this.payload = payload;
   }
 
+  // for getting payload
+  public getPayload(): string {
+    return this.payload as string;
+  }
+
   // For getting the payLoadSize Gradually
   public getPayloadSize(): number {
     if (!this.payload) {
