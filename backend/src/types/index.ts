@@ -1,3 +1,5 @@
+import { BasePacket } from '../core/Packet';
+
 //Enum for PacketDirection in Metadata
 export enum PacketDirection {
   SENDER_TO_RECEIVER = 'SENDER_TO_RECEIVER',
@@ -49,6 +51,13 @@ export interface LogEntry {
   message: string;
   layer: LayerLevel;
   type: LogLevel;
+}
+
+export interface ILayer {
+  name: string;
+  level: LayerLevel;
+  handleOutgoing: (packet: BasePacket) => void;
+  handleIncoming: (packet: BasePacket, incomingPayload?: string) => void;
 }
 
 //TODO Specific headers for layer.

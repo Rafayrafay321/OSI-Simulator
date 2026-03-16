@@ -1,73 +1,66 @@
-# OSI Packet Simulator - Project Roadmap
+Excellent. Thank you for the context. I've analyzed your orchestrator.ts file and it's the perfect starting point. You've correctly identified the tight
+coupling—the "chain" of new Layer(..., new Layer(...)) is exactly the problem the Mediator pattern solves.
 
-This document outlines the next steps to enhance this project, turning it into a comprehensive portfolio piece. The tasks are designed to be high-level to guide your learning.
+You have a clear vision, and my role is to provide the roadmap. We will use TDD to transform this Orchestrator into a true NetworkStack mediator. We will
+focus on the handleIncoming logic first.
 
----
+Here is your high-level, step-by-step TDD plan.
 
-### Phase 1: Testing and Validation (Highest Priority)
+Step 1: Forge the NetworkStack and Its Core Logic
 
-**Goal:** Prove your code is reliable and works as expected by implementing a professional testing suite. This is a critical skill for any software developer.
+We'll start by building the mediator itself. The goal is to create a class that knows about all the layers and can route packets between them.
 
-**Task:** Set up the Jest testing framework and write unit tests for each layer.
+Your TDD Plan:
 
-**Hints:**
+1.  Test 1 (Layer Registration): A stack needs to know what layers it's managing.
+    - Write this test first: Create a test file for your NetworkStack. In it, test that your NetworkStack has a registerLayer method. In the test, create
+      a mock layer, register it, and then assert that the stack is now aware of it (e.g., a private property in the stack now contains the mock layer).
 
-- **Setup:**
-  - Install Jest, `ts-jest` (for TypeScript support), and `@types/jest`.
-  - Create a `jest.config.js` file in the `backend` directory. `ts-jest` can help generate a basic configuration.
-  - Consider adding a `test` script to your `package.json`: `"test": "jest"`.
-- **Writing Tests:**
-  - Create a `__tests__` directory inside `backend/src`.
-  - Start with a simple test file, like `applicationLayer.test.ts`.
-  - In your tests, you'll need to "mock" dependencies. For example, when testing `ApplicationLayer`, you don't need a real `TransportLayer`. Use `jest.fn()` to create mock functions for the `logger` and the `nextLayer`.
-  - Your test should check things like: "When `handleOutgoing` is called, is the payload correctly set on the packet?" and "Was the `nextLayer`'s `handleOutgoing` method called exactly once?".
-
----
-
-### Phase 2: Completing the Simulation Loop
-
-**Goal:** Implement the "incoming" packet flow to create a full, two-way simulation. This demonstrates your ability to think through a complete data lifecycle.
-
-**Task:** Implement the `handleIncoming` method for each layer, starting from the bottom (`PhysicalLayer`) and moving up.
-
-**Hints:**
-
-- **Reverse Flow:** The `handleIncoming` method should do the reverse of `handleOutgoing`.
-- **Header Processing:** Each layer should be responsible for reading and validating its own header from the packet.
-- **Passing the Packet Up:** After a layer processes its header, it should "unwrap" it and pass the rest of the packet up to the next layer in the stack.
-- **Reassembly:**
-  - **Network Layer:** If a packet was fragmented, how will you collect all the fragments and reassemble them in the correct order before passing the complete data to the `TransportLayer`?
-  - **Transport Layer:** Similarly, how will you reassemble segments of data?
+2.  Test 2 (Incoming Routing): This is the mediator's primary job. It must direct a packet "up" the stack.
+    - Write this test next: Create a test for a method like routeIncoming(packet). In this test:
+      1.  Create mock instances of the DataLinkLayer and the NetworkLayer.
+      2.  Register both mocks with your NetworkStack.
+      3.  Create a mock packet and set its metadata.currentLayer to DATA_LINK_2.
+      4.  Call networkStack.routeIncoming(packet).
+      5.  Assert that handleIncoming was called on your mock NetworkLayer, and not on the DataLinkLayer. This proves your routing logic is working
+          correctly.
 
 ---
 
-### Phase 3: Enhancing Realism
+Step 2: Decouple Your First Layer (DataLinkLayer)
 
-**Goal:** Add features that make your simulation behave more like a real network. This shows a deeper understanding of networking concepts.
+Now we'll refactor a single layer to talk to the mediator instead of another layer.
 
-**Task:** Implement more dynamic and realistic network behaviors.
+Your TDD Plan:
 
-**Hints:**
+1.  Test 1 (Constructor Refactor): The layer must depend on the NetworkStack.
+    - Go to dataLinkLayer.test.ts: Modify the test for creating a DataLinkLayer. Change its constructor so it no longer accepts nextLayer. Instead, it
+      must accept an instance of your NetworkStack. The test should now pass a mock NetworkStack to the constructor.
 
-- **Simulate ARP Requests:** Instead of a pre-populated ARP cache in the `DataLinkLayer`, what if a MAC address is missing? You could have the layer "broadcast" a request, which the `Orchestrator` could intercept and "reply" to.
-- **Implement Routing Logic:** Use the `routingTable` in your `NetworkLayer`. When a packet arrives, the layer should look at the destination IP and use the routing table to decide which `nextLayer` to send it to. What should happen if there's no route?
-- **Simulate Packet Corruption:** In the `PhysicalLayer`, introduce a small probability that a byte in the packet's payload gets flipped. Then, in the `DataLinkLayer`'s `handleIncoming` method, re-calculate the checksum and compare it to the one in the header to see if you can detect the error.
+2.  Test 2 (Behavior Refactor): The layer must hand off the packet to the stack.
+    - Write this test next: In a test for the "success" scenario of handleIncoming (e.g., the MAC address matches), the final assertion will change.
+      Instead of asserting that nextLayer.handleIncoming was called, you will now assert that networkStack.routeIncoming was called. You'll write this
+      test, watch it fail, and then implement the change in your DataLinkLayer's handleIncoming method to make it pass.
 
 ---
 
-### Phase 4: Professional Polish
+Step 3: Repeat, Integrate, and Conquer
 
-**Goal:** Make your project easy for others (like hiring managers) to understand, run, and evaluate.
+Once you have one layer refactored, the rest will follow the same pattern.
 
-**Task:** Improve the project's tooling and documentation.
+1.  Repeat Step 2 for all other layers (NetworkLayer, TransportLayer, etc.). For each one, use TDD to change its constructor and its handleIncoming logic
+    to communicate with the NetworkStack.
 
-**Hints:**
+2.  Write the Full Integration Test:
+    - Goal: Prove the entire decapsulation flow works through the mediator.
+    - Action: In a high-level test file:
+      1.  Create a real NetworkStack instance.
+      2.  Create real instances of all your layers and register them with the stack.
+      3.  Create a Packet that is fully encapsulated (has headers for all layers).
+      4.  Kick off the process: networkStack.routeIncoming(packet).
+      5.  Assert that the handleIncoming method of your ApplicationLayer was eventually called with the final, pure payload.
 
-- **`package.json` Scripts:**
-  - Add a `build` script that uses the TypeScript compiler (`tsc`) to output JavaScript files to a `dist` directory.
-  - Add a `start` script that uses `node` to run the compiled output from your `build` script.
-- **`README.md`:**
-  - Write a compelling project description. What is the goal of this simulator?
-  - Add a "Features" section that lists what you've implemented (e.g., "Layered Architecture", "Packet Fragmentation", "Unit Testing").
-  - Include clear "How to Run" instructions that tell a user to `npm install`, `npm run build`, and `npm start`. Don't forget `npm test`!
-    .
+This plan provides a safe, iterative path to your desired architecture. You will build and test the mediator, then connect each layer to it one by one,
+ensuring everything works at each stage.
+
+Let's begin. How would you like to start writing your very first test for the NetworkStack's registerLayer method?

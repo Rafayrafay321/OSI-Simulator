@@ -14,7 +14,8 @@ export class PhysicalLayer {
   }
 
   public handleOutgoing(packet: BasePacket) {
-    if (!packet.payload) {
+    let payload = packet.payload as string;
+    if (payload) {
       this.logger.log(
         LayerLevel.DATA_LINK,
         'Payload can not be empty',
@@ -35,15 +36,18 @@ export class PhysicalLayer {
       `Transmitting ${rawData.length} bytes.`,
       LogLevel.INFO,
     );
-    this.handleIncoming(packet); // Loopback for simulation
+
+    this.handleIncoming(packet, payload); // Loopback for simulation
   }
 
-  public handleIncoming(packet: BasePacket) {
+  public handleIncoming(packet: BasePacket, incomingPayload: string) {
     this.logger.log(
       LayerLevel.APPLICATION,
       'Handling incoming packet.',
       LogLevel.INFO,
     );
+
+    packet.setPayload(incomingPayload);
     packet.metadata.currentLayer = LayerLevel.PHYSICAL;
     // In a real scenario, this would deserialize the raw data
     this.logger.log(

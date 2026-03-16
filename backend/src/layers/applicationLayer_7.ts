@@ -22,14 +22,14 @@ export class ApplicationLayer {
     this.nextLayer = nextLayer;
     this.logger = logger;
   }
-  // TODO Add validation for payload.
-  handleOutgoing = (packet: BasePacket, payload: string): void => {
+  // TODO Add validation for outgoingPaylaod.
+  handleOutgoing = (packet: BasePacket, outgoingPayload: string): void => {
     this.logger.log(
       LayerLevel.APPLICATION,
-      `Sending payload: ${payload.substring(0, 30)}...`,
+      `Sending outgoingPayload: ${outgoingPayload.substring(0, 30)}...`,
       LogLevel.INFO,
     );
-    packet.setPayload(payload);
+    packet.setPayload(outgoingPayload);
     packet.addHeader(LayerLevel.APPLICATION, {
       protocol: this.protocol,
       method: this.method,
@@ -43,7 +43,7 @@ export class ApplicationLayer {
     // if (header) {
     //   this.logger.log(
     //     LayerLevel.APPLICATION,
-    //     `Received payload: ${packet.getPayload().substring(0, 30)}...`,
+    //     `Received outgoingPayload: ${packet.getoutgoingPayload().substring(0, 30)}...`,
     //     LogLevel.INFO,
     //   );
     // }
