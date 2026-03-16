@@ -7,7 +7,7 @@ import { Logger } from '../src/core/Logger';
 import { NetworkStack } from '../src/core/NetworkStack';
 
 // Types
-import { LayerLevel, LogLevel, ILayer } from '../src/types';
+import { LayerLevel, ILayer } from '../src/types';
 
 // Mocking dependencies
 jest.mock('../src/core/Logger');
@@ -15,6 +15,7 @@ jest.mock('../src/core/Packet', () => ({
   BasePacket: jest.fn().mockImplementation(() => {
     const mockInstance = {
       setPayload: jest.fn(),
+      getPayload: jest.fn(),
       metadata: {},
     };
     return mockInstance;
@@ -51,7 +52,7 @@ describe('NetworkStack Tests', () => {
       handleIncoming: jest.fn(),
     } as unknown as jest.Mocked<ILayer>;
 
-    networkStack = new NetworkStack();
+    networkStack = new NetworkStack(mockLogger);
   });
 
   it('Should have a registerLayer method', () => {
@@ -63,12 +64,24 @@ describe('NetworkStack Tests', () => {
     };
     networkStack.registerLayer(mockLayer);
 
-    expect((networkStack as any).layers).toContain(mockLayer);
+    expect((networkStack as any).layers.get(mockLayer.level)).toBe(mockLayer);
+  });
+
+  it('Should throw an Error if Layer not present in layers Map', () => {
+    mockPacket.metadata.currentLayer = LayerLevel.PRESENTATION;
+
+    expect(() => {
+      networkStack.routeIncoming(mockPacket);
+    }).toThrow('Layer not present to process');
   });
 
   it('Should route the packet to the destination', () => {
     networkStack.registerLayer(mockPhysicalLayer);
     networkStack.registerLayer(mockDataLinkLayer);
-    mockPacket.metadata.currentLayer = LayerLevel.DATA_LINK;
+    mockPacket.metadata.currentLayer = LayerLevel.PHYSICAL;
+
+    networkStack.routeIncoming(mockPacket);
+
+    expect(mockPhysicalLayer.handleIncoming).toHaveBeenCalled();
   });
 });

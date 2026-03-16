@@ -22,8 +22,7 @@ Your TDD Plan:
       2.  Register both mocks with your NetworkStack.
       3.  Create a mock packet and set its metadata.currentLayer to DATA_LINK_2.
       4.  Call networkStack.routeIncoming(packet).
-      5.  Assert that handleIncoming was called on your mock NetworkLayer, and not on the DataLinkLayer. This proves your routing logic is working
-          correctly.
+      5.  Assert that handleIncoming was called on your mock NetworkLayer, and not on the DataLinkLayer. This proves your routing logic is working correctly.
 
 ---
 
