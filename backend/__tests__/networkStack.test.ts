@@ -75,7 +75,7 @@ describe('NetworkStack Tests', () => {
     }).toThrow('Layer not present to process');
   });
 
-  it('Should route the packet to the destination', () => {
+  it('Should route the Incoming packet to the destination', () => {
     networkStack.registerLayer(mockPhysicalLayer);
     networkStack.registerLayer(mockDataLinkLayer);
     mockPacket.metadata.currentLayer = LayerLevel.PHYSICAL;
@@ -84,4 +84,16 @@ describe('NetworkStack Tests', () => {
 
     expect(mockPhysicalLayer.handleIncoming).toHaveBeenCalled();
   });
+
+  it('Should route the outgoing packet to the destination', () => {
+    networkStack.registerLayer(mockDataLinkLayer);
+    networkStack.registerLayer(mockPhysicalLayer);
+    mockPacket.metadata.currentLayer = LayerLevel.DATA_LINK;
+
+    networkStack.routeOutgoing(mockPacket);
+
+    expect(mockDataLinkLayer.handleOutgoing).toHaveBeenCalled();
+  });
+
+  it('Should process the data sequentially down the entire stack', () => {});
 });
