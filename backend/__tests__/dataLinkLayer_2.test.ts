@@ -3,7 +3,6 @@ import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 
 // Custom imports
 import { BasePacket } from '../src/core/Packet';
-import { PhysicalLayer } from '../src/layers/physicalLayer_1';
 import { DataLinkLayer } from '../src/layers/dataLinkLayer_2';
 import { Logger } from '../src/core/Logger';
 
@@ -11,7 +10,6 @@ import { Logger } from '../src/core/Logger';
 import { LayerLevel } from '../src/types';
 
 // Mocking Dependencies
-jest.mock('../src/layers/physicalLayer_1');
 jest.mock('../src/core/Logger');
 jest.mock('../src/core/Packet', () => ({
   BasePacket: jest.fn().mockImplementation(() => {
@@ -28,17 +26,12 @@ jest.mock('../src/core/Packet', () => ({
 describe('dataLinkLayer Tests', () => {
   let dataLinkLayer: DataLinkLayer;
 
-  let mockNextLayer: jest.Mocked<PhysicalLayer>;
   let mockPacket: jest.Mocked<BasePacket>;
   let mockLogger: jest.Mocked<Logger>;
   let mockArpCache: Map<string, string>;
 
   beforeEach(() => {
     jest.clearAllMocks();
-
-    mockNextLayer = {
-      handleOutgoing: jest.fn(),
-    } as unknown as jest.Mocked<PhysicalLayer>;
 
     mockLogger = {
       log: jest.fn(),
@@ -53,7 +46,6 @@ describe('dataLinkLayer Tests', () => {
         srcMac: '02:A1:C3:54:7B:9D',
         etherType: 80000,
       },
-      mockNextLayer,
       mockArpCache,
       mockLogger,
     );
@@ -98,6 +90,5 @@ describe('dataLinkLayer Tests', () => {
       destMac: destMac,
       trailer: expect.any(Number),
     });
-    expect(mockNextLayer.handleOutgoing).toHaveBeenCalled();
   });
 });

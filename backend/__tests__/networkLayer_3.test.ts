@@ -16,7 +16,6 @@ import {
 } from '../src/types';
 
 // Mock all dependencies of NetworkLayer
-jest.mock('../src/layers/dataLinkLayer_2');
 jest.mock('../src/config/env');
 jest.mock('../src/core/Logger');
 jest.mock('node:crypto');
@@ -45,9 +44,6 @@ describe('Network Layer Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    mockNextLayer = {
-      handleOutgoing: jest.fn(),
-    } as unknown as jest.Mocked<DataLinkLayer>;
     mockLogger = { log: jest.fn() } as unknown as jest.Mocked<Logger>;
 
     // This is now simple, as our mock factory does all the hard work.
@@ -64,7 +60,6 @@ describe('Network Layer Tests', () => {
         MFflag: 1,
         fragmentOffSet: 100,
       },
-      mockNextLayer,
       mockLogger,
     );
   });
@@ -93,7 +88,6 @@ describe('Network Layer Tests', () => {
     networkLayer.handleOutgoing(mockPacket);
 
     // Assert
-    expect(mockNextLayer.handleOutgoing).toHaveBeenCalledTimes(1);
     expect(mockPacket.addHeader).toHaveBeenCalledWith(LayerLevel.NETWORK, {
       id: '3944jvjjf33',
       srcIp: '192.168.2.10',
@@ -122,16 +116,11 @@ describe('Network Layer Tests', () => {
     jest.mocked(env).env.IP_HEADER_SIZE = 20;
     (crypto.randomUUID as jest.Mock).mockReturnValue('mock-fragment-id');
 
-    const expectedFragments = Math.ceil(payload.length / (40 - 20));
-
     // Act
     networkLayer.handleOutgoing(mockPacket);
 
     // Assert
     expect(crypto.randomUUID).toHaveBeenCalledTimes(1);
-    expect(mockNextLayer.handleOutgoing).toHaveBeenCalledTimes(
-      expectedFragments,
-    );
     expect(mockLogger.log).toHaveBeenCalled();
   });
 });

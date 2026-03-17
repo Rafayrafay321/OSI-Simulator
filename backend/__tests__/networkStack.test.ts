@@ -180,4 +180,45 @@ describe('NetworkStack Tests', () => {
       'Physical Layer',
     ]);
   });
+
+  it('sendData should process packets in correct accsending order', () => {
+    const callOrder: string[] = [];
+
+    mockApplicationLayer.handleIncoming.mockImplementation(() => {
+      callOrder.push('Application Layer');
+    });
+    mockTransportLayer.handleIncoming.mockImplementation(() => {
+      callOrder.push('Transport Layer');
+    });
+    mockNetworkLayer.handleIncoming.mockImplementation(() => {
+      callOrder.push('Network Layer');
+    });
+    mockDataLinkLayer.handleIncoming.mockImplementation(() => {
+      callOrder.push('Data Link Layer');
+    });
+    mockPhysicalLayer.handleIncoming.mockImplementation(() => {
+      callOrder.push('Physical Layer');
+    });
+
+    const layersList = [
+      mockApplicationLayer,
+      mockNetworkLayer,
+      mockTransportLayer,
+      mockDataLinkLayer,
+      mockPhysicalLayer,
+    ];
+    layersList.forEach((layer) => {
+      networkStack.registerLayer(layer);
+    });
+
+    networkStack.receiveData(mockPacket);
+
+    expect(callOrder).toEqual([
+      'Physical Layer',
+      'Data Link Layer',
+      'Network Layer',
+      'Transport Layer',
+      'Application Layer',
+    ]);
+  });
 });

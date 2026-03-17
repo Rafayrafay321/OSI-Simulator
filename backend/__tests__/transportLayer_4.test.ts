@@ -2,14 +2,12 @@
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 
 // Custom imports
-import { NetworkLayer } from '../src/layers/networkLayer_3';
 import { TransportLayer } from '../src/layers/transportLayer_4';
 import { BasePacket } from '../src/core/Packet';
 import { Logger } from '../src/core/Logger';
 import * as env from '../src/config/env';
 import { LayerLevel, LogLevel } from '../src/types';
 
-jest.mock('../src/layers/networkLayer_3');
 jest.mock('../src/core/Logger');
 jest.mock('../src/core/Packet', () => ({
   BasePacket: jest.fn().mockImplementation(() => {
@@ -27,16 +25,11 @@ jest.mock('../src/core/Packet', () => ({
 jest.mock('../src/config/env');
 describe('Transport Layer Tests', () => {
   let transportLayer: TransportLayer;
-  let mockNextLayer: jest.Mocked<NetworkLayer>;
   let mockPacket: jest.Mocked<BasePacket>;
   let mockLogger: jest.Mocked<Logger>;
 
   beforeEach(() => {
     jest.clearAllMocks();
-
-    mockNextLayer = {
-      handleOutgoing: jest.fn(),
-    } as unknown as jest.Mocked<NetworkLayer>;
 
     mockPacket = new BasePacket() as jest.Mocked<BasePacket>;
 
@@ -52,7 +45,6 @@ describe('Transport Layer Tests', () => {
         totalSegment: 1,
         underlyingProtocol: 'TCP',
       },
-      mockNextLayer,
       mockLogger,
     );
   });
@@ -74,9 +66,6 @@ describe('Transport Layer Tests', () => {
     jest.mocked(env).env.CONFIG_MSS = 2000;
 
     transportLayer.handleOutgoing(mockPacket);
-
-    expect(mockNextLayer.handleOutgoing).toHaveBeenCalledTimes(1);
-    expect(mockNextLayer.handleOutgoing).toHaveBeenCalledWith(mockPacket);
 
     expect(mockPacket.addHeader).toHaveBeenCalledWith(LayerLevel.TRANSPORT, {
       underlyingProtocol: 'TCP',
@@ -103,8 +92,6 @@ describe('Transport Layer Tests', () => {
     );
 
     transportLayer.handleOutgoing(mockPacket);
-
-    expect(mockNextLayer.handleOutgoing).toHaveBeenCalledTimes(n);
     expect(mockLogger.log).toHaveBeenCalled();
   });
 });

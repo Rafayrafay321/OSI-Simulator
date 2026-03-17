@@ -25,12 +25,10 @@ export class NetworkLayer {
   public MFflag: number;
   public fragmentOffSet: number;
   public routingTable?: Map<string, NetworkLayer>;
-  private nextLayer: DataLinkLayer;
   private logger: Logger;
 
   constructor(
     options: NetworkLayerData,
-    nextLayer: DataLinkLayer,
     logger: Logger,
     routingTable?: Map<string, NetworkLayer>,
   ) {
@@ -43,7 +41,6 @@ export class NetworkLayer {
     this.MFflag = options.MFflag;
     this.fragmentOffSet = options.fragmentOffSet;
     this.routingTable = routingTable;
-    this.nextLayer = nextLayer;
     this.logger = logger;
   }
   public handleOutgoing(packet: BasePacket) {
@@ -108,7 +105,6 @@ export class NetworkLayer {
           `Passing fragment ${i + 1} to Data Link Layer.`,
           LogLevel.INFO,
         );
-        this.nextLayer.handleOutgoing(newFragmentPacket);
       }
     } else {
       packet.addHeader(LayerLevel.NETWORK, {
@@ -132,7 +128,6 @@ export class NetworkLayer {
         'Passing packet to Data Link Layer.',
         LogLevel.INFO,
       );
-      this.nextLayer.handleOutgoing(packet);
     }
   }
 

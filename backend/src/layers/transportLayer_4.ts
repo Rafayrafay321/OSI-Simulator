@@ -20,20 +20,14 @@ export class TransportLayer {
   public destPort: number;
   public segmentIndex: number;
   public totalSegment: number;
-  private nextLayer: NetworkLayer;
   private logger: Logger;
 
-  constructor(
-    options: TransportLayerData,
-    nextLayer: NetworkLayer,
-    logger: Logger,
-  ) {
+  constructor(options: TransportLayerData, logger: Logger) {
     this.underlyingProtocol = options.underlyingProtocol;
     this.srcPort = options.srcPort;
     this.destPort = options.destPort;
     this.segmentIndex = options.segmentIndex;
     this.totalSegment = options.totalSegment;
-    this.nextLayer = nextLayer;
     this.logger = logger;
   }
   // Helper method for copying Headers
@@ -135,7 +129,6 @@ export class TransportLayer {
           `Passing segment ${i + 1} to Network Layer.`,
           LogLevel.INFO,
         );
-        this.nextLayer.handleOutgoing(newSegmentPacket);
       }
     } else {
       const headerData: Omit<TransportLayerData, 'checkSum'> = {
@@ -162,7 +155,6 @@ export class TransportLayer {
         'Passing packet to Network Layer.',
         LogLevel.INFO,
       );
-      this.nextLayer.handleOutgoing(packet);
     }
   }
 

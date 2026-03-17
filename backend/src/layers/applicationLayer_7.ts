@@ -8,18 +8,12 @@ export class ApplicationLayer {
   public protocol: string;
   public method: string;
   public sender: string;
-  private nextLayer: TransportLayer;
   private logger: Logger;
 
-  constructor(
-    options: ApplicationLayerData,
-    nextLayer: TransportLayer,
-    logger: Logger,
-  ) {
+  constructor(options: ApplicationLayerData, logger: Logger) {
     this.protocol = options.protocol;
     this.method = options.method;
     this.sender = options.sender;
-    this.nextLayer = nextLayer;
     this.logger = logger;
   }
   // TODO Add validation for outgoingPaylaod.
@@ -35,8 +29,6 @@ export class ApplicationLayer {
       method: this.method,
       sender: this.sender,
     });
-
-    this.nextLayer.handleOutgoing(packet);
   };
   handleIncomming = (packet: BasePacket) => {
     // const header = packet.getHeader(LayerLevel.APPLICATION);

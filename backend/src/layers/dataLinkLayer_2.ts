@@ -14,19 +14,16 @@ import { BasePacket } from '../core/Packet';
 export class DataLinkLayer {
   public srcMac: string;
   public etherType: number;
-  private nextLayer: PhysicalLayer;
   private arpCache: Map<string, string>;
   private logger: Logger;
 
   constructor(
     options: DataLinkLayerOptions,
-    nextLayer: PhysicalLayer,
     arpCache: Map<string, string>,
     logger: Logger,
   ) {
     this.srcMac = options.srcMac;
     this.etherType = options.etherType;
-    this.nextLayer = nextLayer;
     this.arpCache = arpCache;
     this.logger = logger;
   }
@@ -116,7 +113,6 @@ export class DataLinkLayer {
       'Passing packet to Physical Layer.',
       LogLevel.INFO,
     );
-    this.nextLayer.handleOutgoing(packet);
   }
 
   public handleIncoming(packet: BasePacket) {
