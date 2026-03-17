@@ -27,6 +27,10 @@ describe('NetworkStack Tests', () => {
 
   let mockPhysicalLayer: jest.Mocked<ILayer>;
   let mockDataLinkLayer: jest.Mocked<ILayer>;
+  let mockNetworkLayer: jest.Mocked<ILayer>;
+  let mockTransportLayer: jest.Mocked<ILayer>;
+  let mockApplicationLayer: jest.Mocked<ILayer>;
+
   let mockLogger: jest.Mocked<Logger>;
   let mockArpCache: Map<string, string>;
   let mockPacket: jest.Mocked<BasePacket>;
@@ -48,6 +52,27 @@ describe('NetworkStack Tests', () => {
     mockDataLinkLayer = {
       name: 'Data Link Layer',
       level: LayerLevel.DATA_LINK,
+      handleOutgoing: jest.fn(),
+      handleIncoming: jest.fn(),
+    } as unknown as jest.Mocked<ILayer>;
+
+    mockNetworkLayer = {
+      name: 'Network Layer',
+      level: LayerLevel.NETWORK,
+      handleOutgoing: jest.fn(),
+      handleIncoming: jest.fn(),
+    } as unknown as jest.Mocked<ILayer>;
+
+    mockTransportLayer = {
+      name: 'Transport Layer',
+      level: LayerLevel.TRANSPORT,
+      handleOutgoing: jest.fn(),
+      handleIncoming: jest.fn(),
+    } as unknown as jest.Mocked<ILayer>;
+
+    mockApplicationLayer = {
+      name: 'Application Layer',
+      level: LayerLevel.APPLICATION,
       handleOutgoing: jest.fn(),
       handleIncoming: jest.fn(),
     } as unknown as jest.Mocked<ILayer>;
@@ -95,5 +120,64 @@ describe('NetworkStack Tests', () => {
     expect(mockDataLinkLayer.handleOutgoing).toHaveBeenCalled();
   });
 
-  it('Should process the data sequentially down the entire stack', () => {});
+  it('Should process the data sequentially down the entire stack', () => {
+    const layersList = [
+      mockApplicationLayer,
+      mockTransportLayer,
+      mockNetworkLayer,
+      mockDataLinkLayer,
+      mockPhysicalLayer,
+    ];
+    layersList.forEach((layer) => {
+      networkStack.registerLayer(layer);
+    });
+
+    networkStack.sendData(mockPacket);
+
+    layersList.forEach((layer) => {
+      expect(layer.handleOutgoing).toHaveBeenCalled();
+      expect(layer.handleOutgoing).toHaveBeenCalledWith(mockPacket);
+    });
+  });
+
+  it('sendData should process packets in correct descending order', () => {
+    const callOrder: string[] = [];
+
+    mockApplicationLayer.handleOutgoing.mockImplementation(() => {
+      callOrder.push('Application Layer');
+    });
+    mockTransportLayer.handleOutgoing.mockImplementation(() => {
+      callOrder.push('Transport Layer');
+    });
+    mockNetworkLayer.handleOutgoing.mockImplementation(() => {
+      callOrder.push('Network Layer');
+    });
+    mockDataLinkLayer.handleOutgoing.mockImplementation(() => {
+      callOrder.push('Data Link Layer');
+    });
+    mockPhysicalLayer.handleOutgoing.mockImplementation(() => {
+      callOrder.push('Physical Layer');
+    });
+
+    const layersList = [
+      mockApplicationLayer,
+      mockNetworkLayer,
+      mockTransportLayer,
+      mockDataLinkLayer,
+      mockPhysicalLayer,
+    ];
+    layersList.forEach((layer) => {
+      networkStack.registerLayer(layer);
+    });
+
+    networkStack.sendData(mockPacket);
+
+    expect(callOrder).toEqual([
+      'Application Layer',
+      'Transport Layer',
+      'Network Layer',
+      'Data Link Layer',
+      'Physical Layer',
+    ]);
+  });
 });

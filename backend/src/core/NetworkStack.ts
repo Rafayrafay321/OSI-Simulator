@@ -41,4 +41,28 @@ export class NetworkStack {
     }
     layerToProcess.handleOutgoing(packet);
   }
+
+  public sendData(packet: BasePacket) {
+    const layerWeights: Partial<Record<LayerLevel, number>> = {
+      [LayerLevel.APPLICATION]: 7,
+      [LayerLevel.TRANSPORT]: 4,
+      [LayerLevel.NETWORK]: 3,
+      [LayerLevel.DATA_LINK]: 2,
+      [LayerLevel.PHYSICAL]: 1,
+    };
+
+    const allLayers = Array.from(this.layers.values());
+    allLayers.sort(
+      (a, b) => (layerWeights[b.level] || 0) - (layerWeights[a.level] || 0),
+    );
+
+    for (const layer of allLayers) {
+      this.logger.log(
+        layer.level,
+        `Sending data down through ${layer.name}`,
+        LogLevel.INFO,
+      );
+      layer.handleOutgoing(packet);
+    }
+  }
 }
