@@ -1,6 +1,6 @@
 // Custom Imports
-import { PhysicalLayer } from './physicalLayer_1';
 import { Logger } from '../core/Logger';
+import { env } from '../config/env';
 
 // Types
 import {
@@ -36,7 +36,7 @@ export class DataLinkLayer {
   ) {
     const headersDataString: string = `${headers.srcMac}${destMac}${headers.etherType}`;
     const dataToCheckSum = headersDataString + payload;
-    const fcs: number[] = packet.to16BitChuck(dataToCheckSum);
+    const fcs: number[] = packet.to16BitChunck(dataToCheckSum);
 
     const sum = fcs.reduce((acc: number, val: number) => {
       acc += val;
@@ -116,11 +116,74 @@ export class DataLinkLayer {
   }
 
   public handleIncoming(packet: BasePacket) {
+    const BROADCAST_MAC_ADDRESS = env.BOARDCAST_MAC_ADD;
     this.logger.log(
       LayerLevel.DATA_LINK,
       'Handling incoming packet.',
       LogLevel.INFO,
     );
-    // TODO: Implement incoming logic for DataLinkLayer
+
+    const incommingPaylaod = packet.getPayload();
+    if (!incommingPaylaod) {
+      this.logger.log(
+        LayerLevel.DATA_LINK,
+        'Incoming Payload can not be empty.',
+        LogLevel.ERROR,
+      );
+      throw new Error('Incoming Payload can not be empty');
+    }
+
+    const DataLinkLayerRawHeaders = packet.getHeader();
+    const DataLinkLayerHeaders = DataLinkLayerRawHeaders as DataLinkLayerData;
+    const incommingCheckSum = DataLinkLayerHeaders.trailer;
+
+    if (incommingCheckSum === undefined || isNaN(incommingCheckSum)) {
+      this.logger.log(
+        LayerLevel.DATA_LINK,
+        'Incoming checkSum can not be empty',
+        LogLevel.ERROR,
+      );
+      throw new Error('Incoming checkSum can not be empty');
+    }
+
+    // Verify the MacAddress
+    if (
+      DataLinkLayerHeaders.destMac !== this.srcMac &&
+      DataLinkLayerHeaders.destMac !== BROADCAST_MAC_ADDRESS
+    ) {
+      this.logger.log(
+        LayerLevel.DATA_LINK,
+        'Dropping packet for incorrect MAC',
+        LogLevel.INFO,
+      );
+      return;
+    } else if (DataLinkLayerHeaders.destMac === BROADCAST_MAC_ADDRESS) {
+      this.logger.log(
+        LayerLevel.DATA_LINK,
+        'BoardCasting: As it is meant for boardCasting',
+        LogLevel.INFO,
+      );
+    }
+    const checkSum = this.calCheckSum(
+      {
+        srcMac: DataLinkLayerHeaders.srcMac,
+        etherType: DataLinkLayerHeaders.etherType,
+      },
+      DataLinkLayerHeaders.destMac,
+      incommingPaylaod,
+      packet,
+    );
+
+    // Verify CheckSum
+    if (checkSum !== incommingCheckSum) {
+      this.logger.log(
+        LayerLevel.DATA_LINK,
+        'CheckSum Failed. Cant proceed Further.',
+        LogLevel.ERROR,
+      );
+      return;
+    }
+    // Remove DataLink headers
+    packet.removeHeader(LayerLevel.DATA_LINK);
   }
 }

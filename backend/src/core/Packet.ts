@@ -36,7 +36,7 @@ export class BasePacket {
     this.logHistory.push(logEntry);
   }
 
-  public to16BitChuck(data: string): number[] {
+  public to16BitChunck(data: string): number[] {
     const encoder = new TextEncoder();
     // Convert string into bytes before bits.
     const databytes = encoder.encode(data);
@@ -81,6 +81,17 @@ export class BasePacket {
     return newPacket;
   }
 
+  public getHeader() {
+    const currentLayer = this.metadata.currentLayer;
+    const currentLayerheaderObject = this.headers.find(
+      (headerObject) => headerObject.layerName === currentLayer,
+    );
+    if (!currentLayerheaderObject) {
+      throw new Error('Headers not Found');
+    }
+    const currentLayerheaderData = currentLayerheaderObject.data;
+    return currentLayerheaderData;
+  }
   // Generic header attachment API
   public addHeader(layerName: LayerLevel, data: LayerData): void {
     const header: Header = {
@@ -98,5 +109,17 @@ export class BasePacket {
     );
   }
 
-  //TODO: Method for removing headers for incomming.
+  public removeHeader(layerName: LayerLevel): void {
+    const layerToRemove = this.metadata.currentLayer;
+    const indexOfHeaderToRemove = this.headers.findIndex(
+      (headerObject) => (headerObject.layerName = layerToRemove),
+    );
+    this.headers.splice(indexOfHeaderToRemove, 1);
+
+    this.addLog(
+      layerToRemove,
+      `Header removed at layer ${layerToRemove}`,
+      LogLevel.INFO,
+    );
+  }
 }

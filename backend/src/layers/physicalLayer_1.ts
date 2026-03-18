@@ -42,18 +42,14 @@ export class PhysicalLayer {
 
   public handleIncoming(packet: BasePacket, incomingPayload: string) {
     this.logger.log(
-      LayerLevel.APPLICATION,
+      LayerLevel.PHYSICAL,
       'Handling incoming packet.',
       LogLevel.INFO,
     );
 
     packet.setPayload(incomingPayload);
-    packet.metadata.currentLayer = LayerLevel.PHYSICAL;
+    packet.metadata.currentLayer = LayerLevel.DATA_LINK;
     // In a real scenario, this would deserialize the raw data
-    this.logger.log(
-      LayerLevel.APPLICATION,
-      'Received raw data.',
-      LogLevel.INFO,
-    );
+    this.logger.log(LayerLevel.PHYSICAL, 'Received raw data.', LogLevel.INFO);
   }
 }

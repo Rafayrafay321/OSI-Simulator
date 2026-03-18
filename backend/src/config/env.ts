@@ -14,4 +14,5 @@ export const env = {
   CONFIG_MTU: requireEnv('CONFIG_MTU'),
   CONFIG_MSS: requireEnv('CONFIG_MSS'),
   IP_HEADER_SIZE: requireEnv('IP_HEADER_SIZE'),
+  BOARDCAST_MAC_ADD: requireEnv('BOARDCAST_MAC_ADDRESS'),
 };
