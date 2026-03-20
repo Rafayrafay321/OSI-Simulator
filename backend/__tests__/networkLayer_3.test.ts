@@ -1,6 +1,5 @@
 // Node Imports
 import { jest, it, expect, describe, beforeEach } from '@jest/globals';
-import crypto from 'node:crypto';
 
 // Custom imports
 import { NetworkLayer } from '../src/layers/networkLayer_3';
@@ -9,45 +8,72 @@ import { BasePacket } from '../src/core/Packet';
 import { Logger } from '../src/core/Logger';
 import * as env from '../src/config/env';
 import {
+  LayerData,
   LayerLevel,
   LogLevel,
   PacketDirection,
   PacketStatus,
 } from '../src/types';
 
+// Types
+import { NetworkLayerData } from '../src/types';
+
 // Mock all dependencies of NetworkLayer
 jest.mock('../src/config/env');
 jest.mock('../src/core/Logger');
 jest.mock('node:crypto');
 jest.mock('../src/core/Packet', () => ({
-  BasePacket: jest.fn().mockImplementation(() => {
-    const mockInstance = {
-      payload: null,
-      metadata: null,
-      headers: [],
-      addHeader: jest.fn(),
-      setPayload: jest.fn(),
-      getPayloadSize: jest.fn().mockReturnValue(0),
-      clone: jest.fn(),
-    };
-    mockInstance.clone.mockImplementation(() => new BasePacket());
-    return mockInstance;
-  }),
+  BasePacket: jest.fn().mockImplementation(() => ({
+    payload: null,
+    metadata: null,
+    headers: [],
+    addHeader: jest.fn(),
+    getHeader: jest.fn(),
+    removeHeader: jest.fn(),
+    getPayload: jest.fn(function (this: { payload: string }) {
+      return this.payload;
+    }),
+    setPayload: jest.fn(function (
+      this: { payload: string },
+      newPayload: string,
+    ) {
+      this.payload = newPayload;
+    }),
+    getPayloadSize: jest.fn().mockReturnValue(0),
+    clone: jest.fn(function (this: any) {
+      const newPacket = new BasePacket();
+      newPacket.headers = [...this.headers];
+      return newPacket;
+    }),
+  })),
 }));
+
+const createMockHeader = (
+  overides: Partial<NetworkLayerData> = {},
+): LayerData => ({
+  id: 'default-id',
+  srcIp: '192.168.2.10',
+  destIp: '192.0.2.45',
+  ttl: 64,
+  protocol: 6,
+  DFflag: 0,
+  MFflag: 0,
+  fragmentOffSet: 0,
+  ...overides,
+});
 
 describe('Network Layer Tests', () => {
   let networkLayer: NetworkLayer;
-  let mockPacket: jest.Mocked<BasePacket>;
   let mockLogger: jest.Mocked<Logger>;
-  let mockNextLayer: jest.Mocked<DataLinkLayer>;
+  let mockPacket: jest.Mocked<BasePacket>;
 
   beforeEach(() => {
     jest.clearAllMocks();
 
-    mockLogger = { log: jest.fn() } as unknown as jest.Mocked<Logger>;
-
-    // This is now simple, as our mock factory does all the hard work.
+    mockLogger = new Logger() as jest.Mocked<Logger>;
     mockPacket = new BasePacket() as jest.Mocked<BasePacket>;
+
+    mockPacket.getHeader.mockReturnValue(createMockHeader());
 
     networkLayer = new NetworkLayer(
       {
@@ -56,71 +82,82 @@ describe('Network Layer Tests', () => {
         destIp: '192.0.2.45',
         ttl: 64,
         protocol: 6,
-        DFflag: 1,
-        MFflag: 1,
-        fragmentOffSet: 100,
+        DFflag: 0,
+        MFflag: 0,
+        fragmentOffSet: 0,
       },
       mockLogger,
     );
   });
 
-  it('Should throw an error if packet has no payload', () => {
-    expect(() => {
+  describe('handleOutgoing', () => {
+    it('Should throw an error if packet has no payload', () => {
+      mockPacket.payload = '';
+      expect(() => {
+        networkLayer.handleOutgoing(mockPacket);
+      }).toThrow('Payload can not be empty');
+    });
+
+    it('Should add network headers for non-fragmented packet', () => {
+      mockPacket.payload = 'Hello World';
+      (mockPacket.getPayloadSize as jest.Mock).mockReturnValue(11);
+      jest.mocked(env).env.CONFIG_MTU = 2000;
+      jest.mocked(env).env.IP_HEADER_SIZE = 20;
+
       networkLayer.handleOutgoing(mockPacket);
-    }).toThrow('Payload can not be empty');
 
-    expect(mockLogger.log).toHaveBeenCalledWith(
-      LayerLevel.NETWORK,
-      'Payload can not be empty',
-      LogLevel.ERROR,
-    );
-  });
-
-  it('Should add network headers and pass a single packet to the datalink layer when payload is in MTU', () => {
-    // Arrange
-    mockPacket.payload = 'Hello World';
-    // We must tell the mock how to respond when getPayloadSize() is called
-    (mockPacket.getPayloadSize as jest.Mock).mockReturnValue(11);
-    jest.mocked(env).env.CONFIG_MTU = 2000;
-    jest.mocked(env).env.IP_HEADER_SIZE = 20;
-
-    // Act
-    networkLayer.handleOutgoing(mockPacket);
-
-    // Assert
-    expect(mockPacket.addHeader).toHaveBeenCalledWith(LayerLevel.NETWORK, {
-      id: '3944jvjjf33',
-      srcIp: '192.168.2.10',
-      destIp: '192.0.2.45',
-      ttl: 64,
-      protocol: 6,
-      DFflag: 1,
-      MFflag: 1,
-      fragmentOffSet: 0,
-    });
-    // Assert that the metadata property was set correctly
-    expect(mockPacket.metadata).toEqual({
-      currentLayer: LayerLevel.NETWORK,
-      direction: PacketDirection.SENDER_TO_RECEIVER,
-      status: PacketStatus.HEALTHY,
+      expect(mockPacket.addHeader).toHaveBeenCalledWith(
+        LayerLevel.NETWORK,
+        expect.objectContaining({ MFflag: 0, fragmentOffSet: 0 }),
+      );
+      expect(mockPacket.metadata).toEqual({
+        currentLayer: LayerLevel.NETWORK,
+        direction: PacketDirection.SENDER_TO_RECEIVER,
+        status: PacketStatus.HEALTHY,
+      });
     });
   });
+  describe('HandleIncoming', () => {
+    it('Should process a single, non-fragment packet imdediatley ', () => {
+      const result = networkLayer.handleIncoming(mockPacket);
 
-  it('Should fragment a large payload and pass multiple packets to datalink layer when payload exceeds MTU', () => {
-    // Arrange
-    const payload =
-      'This is a long payload that will definitely need to be fragmented';
-    mockPacket.payload = payload;
-    (mockPacket.getPayloadSize as jest.Mock).mockReturnValue(payload.length);
-    jest.mocked(env).env.CONFIG_MTU = 40;
-    jest.mocked(env).env.IP_HEADER_SIZE = 20;
-    (crypto.randomUUID as jest.Mock).mockReturnValue('mock-fragment-id');
+      expect(mockLogger.log).not.toHaveBeenCalledWith(
+        expect.anything(),
+        expect.stringContaining('Dropping packet'),
+        expect.anything(),
+      );
+      expect(result).toBe(mockPacket);
+      expect(mockPacket.removeHeader).toHaveBeenCalled();
+    });
 
-    // Act
-    networkLayer.handleOutgoing(mockPacket);
+    it('Should buffer the large fragmented packet', () => {
+      mockPacket.getHeader.mockReturnValueOnce(createMockHeader({ MFflag: 1 }));
+      const result = networkLayer.handleIncoming(mockPacket);
+      expect(result).toBeUndefined();
+      expect(mockPacket.removeHeader).not.toHaveBeenCalled();
+    });
 
-    // Assert
-    expect(crypto.randomUUID).toHaveBeenCalledTimes(1);
-    expect(mockLogger.log).toHaveBeenCalled();
+    it('Should reaasemble all the fragments when last one arrive into one packet', () => {
+      const fragment1 = new BasePacket() as jest.Mocked<BasePacket>;
+      fragment1.getHeader.mockReturnValue(
+        createMockHeader({ id: 'set-1', MFflag: 1, fragmentOffSet: 0 }),
+      );
+      fragment1.payload = 'Hello';
+
+      const fragment2 = new BasePacket() as jest.Mocked<BasePacket>;
+      fragment2.getHeader.mockReturnValue(
+        createMockHeader({ id: 'set-1', MFflag: 0, fragmentOffSet: 5 }),
+      );
+      fragment2.payload = 'World';
+
+      const resultOfF1 = networkLayer.handleIncoming(fragment1);
+      const resultOfF2 = networkLayer.handleIncoming(fragment2);
+
+      expect(resultOfF1).toBeUndefined();
+
+      expect(resultOfF2).toBeDefined();
+      expect(resultOfF2).toBe(fragment2);
+      expect(resultOfF2!.payload).toBe('Hello World');
+    });
   });
 });

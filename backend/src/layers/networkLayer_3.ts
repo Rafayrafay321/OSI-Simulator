@@ -1,7 +1,6 @@
 // Node imports
 import crypto from 'node:crypto';
 // Custom Imports
-import { DataLinkLayer } from './dataLinkLayer_2';
 import { env } from '../config/env';
 import { Logger } from '../core/Logger';
 
@@ -25,6 +24,7 @@ export class NetworkLayer {
   public MFflag: number;
   public fragmentOffSet: number;
   public routingTable?: Map<string, NetworkLayer>;
+  private fragmentBuffer: Map<string, BasePacket[]> = new Map();
   private logger: Logger;
 
   constructor(
@@ -137,6 +137,45 @@ export class NetworkLayer {
       'Handling incoming packet.',
       LogLevel.INFO,
     );
-    // TODO: Implement incoming logic for Network Layer
+
+    const headers = packet.getHeader() as NetworkLayerData;
+    const fragmentId = headers.id;
+    const moreFragmentFlag = headers.MFflag;
+
+    if (moreFragmentFlag === 1) {
+      if (!this.fragmentBuffer.has(fragmentId)) {
+        this.fragmentBuffer.set(fragmentId, [packet]);
+        return;
+      } else {
+        const existingArray = this.fragmentBuffer.get(
+          fragmentId,
+        ) as BasePacket[];
+        existingArray.push(packet);
+        return;
+      }
+    }
+    if (this.fragmentBuffer.has(fragmentId)) {
+      let allFragmentPaylaods: string[] = [];
+      const existingArray = this.fragmentBuffer.get(fragmentId) as BasePacket[];
+      existingArray.push(packet);
+      existingArray.sort((packetA, packetB) => {
+        const headerA = packetA.getHeader() as NetworkLayerData;
+        const headerB = packetB.getHeader() as NetworkLayerData;
+
+        return headerA.fragmentOffSet - headerB.fragmentOffSet;
+      });
+      for (let packet of existingArray) {
+        if (!packet.payload) {
+          continue;
+        }
+        allFragmentPaylaods.push(packet.payload as string);
+      }
+      const finalPaylaod = allFragmentPaylaods.join(' ');
+      this.fragmentBuffer.delete(fragmentId);
+      packet.setPayload(finalPaylaod);
+    }
+
+    packet.removeHeader(LayerLevel.NETWORK);
+    return packet;
   }
 }

@@ -185,5 +185,6 @@ export class DataLinkLayer {
     }
     // Remove DataLink headers
     packet.removeHeader(LayerLevel.DATA_LINK);
+    return packet;
   }
 }

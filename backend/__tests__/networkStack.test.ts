@@ -181,7 +181,7 @@ describe('NetworkStack Tests', () => {
     ]);
   });
 
-  it('sendData should process packets in correct accsending order', () => {
+  it('Should process packets in correct accsending order', () => {
     const callOrder: string[] = [];
 
     mockApplicationLayer.handleIncoming.mockImplementation(() => {

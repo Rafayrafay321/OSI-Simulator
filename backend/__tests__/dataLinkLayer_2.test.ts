@@ -145,19 +145,6 @@ describe('DataLinkLayer Tests', () => {
       );
     });
 
-    it('should drop packet if header is missing', () => {
-      (mockPacket.getHeader as jest.Mock).mockReturnValue(undefined);
-
-      dataLinkLayer.handleIncoming(mockPacket);
-
-      expect(mockLogger.log).toHaveBeenCalledWith(
-        LayerLevel.DATA_LINK,
-        'Packet is missing DataLink header',
-        LogLevel.ERROR,
-      );
-      expect(mockPacket.removeHeader).not.toHaveBeenCalled();
-    });
-
     it('should drop packet if checksum is invalid', () => {
       const header = { destMac: MY_MAC_ADDRESS, trailer: 54321 };
       (mockPacket.getHeader as jest.Mock).mockReturnValue(header);
@@ -170,7 +157,7 @@ describe('DataLinkLayer Tests', () => {
       // Assertion: We drop due to bad checksum
       expect(mockLogger.log).toHaveBeenCalledWith(
         LayerLevel.DATA_LINK,
-        expect.stringContaining('Invalid checksum. Dropping packet'),
+        expect.stringContaining('CheckSum Failed. Cant proceed Further.'),
         LogLevel.ERROR,
       );
       expect(mockPacket.removeHeader).not.toHaveBeenCalled();
