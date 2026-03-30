@@ -17,7 +17,7 @@ jest.mock('../src/core/Packet', () => ({
       headers: [],
       addHeader: jest.fn(),
       setPayload: jest.fn(),
-      to16BitChuck: jest.fn().mockReturnValue([]),
+      to16BitChunck: jest.fn().mockReturnValue([]),
       addBaseSegmentHeaders: jest.fn().mockReturnValue([]),
     };
   }),

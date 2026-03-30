@@ -45,9 +45,9 @@ export class TransportLayer {
     packet: BasePacket,
   ) {
     const allChunks: number[] = [
-      ...packet.to16BitChuck(payload),
+      ...packet.to16BitChunck(payload),
       ...Object.values(headerData).flatMap((header) =>
-        packet.to16BitChuck(String(header)),
+        packet.to16BitChunck(String(header)),
       ),
     ];
 

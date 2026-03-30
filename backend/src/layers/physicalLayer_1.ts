@@ -8,20 +8,17 @@ export class PhysicalLayer {
   constructor(logger: Logger) {
     this.logger = logger;
   }
+
   private serializePacket(packet: BasePacket): string {
     // In a real implementation, this would convert the packet into a stream of bits.
     return JSON.stringify(packet);
   }
 
   public handleOutgoing(packet: BasePacket) {
-    let payload = packet.payload as string;
-    if (payload) {
-      this.logger.log(
-        LayerLevel.DATA_LINK,
-        'Payload can not be empty',
-        LogLevel.ERROR,
-      );
-      throw new Error('Payload can not be empty');
+    if (typeof packet.payload !== 'string') {
+      const errorMsg = 'Payload must be a string.';
+      this.logger.log(LayerLevel.PHYSICAL, errorMsg, LogLevel.ERROR);
+      throw new Error(errorMsg);
     }
 
     this.logger.log(
@@ -29,15 +26,17 @@ export class PhysicalLayer {
       'Handling outgoing packet.',
       LogLevel.INFO,
     );
-    // Simulate sending data over a network
+
     const rawData = this.serializePacket(packet);
     this.logger.log(
-      LayerLevel.APPLICATION,
+      LayerLevel.PHYSICAL,
       `Transmitting ${rawData.length} bytes.`,
       LogLevel.INFO,
     );
+    packet.metadata.currentLayer = LayerLevel.PHYSICAL;
 
-    this.handleIncoming(packet, payload); // Loopback for simulation
+    // Loopback for simulation. In a real scenario, this would be an external interface.
+    this.handleIncoming(packet, packet.payload);
   }
 
   public handleIncoming(packet: BasePacket, incomingPayload: string) {
@@ -46,10 +45,9 @@ export class PhysicalLayer {
       'Handling incoming packet.',
       LogLevel.INFO,
     );
-
     packet.setPayload(incomingPayload);
-    packet.metadata.currentLayer = LayerLevel.DATA_LINK;
-    // In a real scenario, this would deserialize the raw data
+    packet.metadata.currentLayer = LayerLevel.PHYSICAL;
+
     this.logger.log(LayerLevel.PHYSICAL, 'Received raw data.', LogLevel.INFO);
   }
 }

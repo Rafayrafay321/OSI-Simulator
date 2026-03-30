@@ -1,8 +1,5 @@
-// Node imports
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
-
-// Custom imports
-import { PhysicalLayer } from '../src/layers/physicalLayer_1'; // Adjust path as needed
+import { PhysicalLayer } from '../src/layers/physicalLayer_1';
 import { BasePacket } from '../src/core/Packet';
 import { Logger } from '../src/core/Logger';
 import { LayerLevel, LogLevel } from '../src/types';
@@ -11,6 +8,7 @@ import { LayerLevel, LogLevel } from '../src/types';
 jest.mock('../src/core/Packet', () => ({
   BasePacket: jest.fn().mockImplementation(() => {
     const mockInstance = {
+      payload: null,
       setPayload: jest.fn(),
       metadata: {},
     };
@@ -18,74 +16,89 @@ jest.mock('../src/core/Packet', () => ({
   }),
 }));
 
-describe('Physical Layer Tests', () => {
+describe('PhysicalLayer', () => {
   let physicalLayer: PhysicalLayer;
   let mockLogger: jest.Mocked<Logger>;
 
-  let mockOutgoingPacket: jest.Mocked<BasePacket>;
-  let mockIncomingPacket: jest.Mocked<BasePacket>;
-
   beforeEach(() => {
     jest.clearAllMocks();
-
     mockLogger = {
       log: jest.fn(),
     } as unknown as jest.Mocked<Logger>;
-
-    mockOutgoingPacket = {
-      payload: null,
-      metadata: {
-        currentLayer: LayerLevel.APPLICATION,
-      },
-    } as unknown as jest.Mocked<BasePacket>;
-
-    mockIncomingPacket = new BasePacket() as jest.Mocked<BasePacket>;
-
     physicalLayer = new PhysicalLayer(mockLogger);
-  });
-  describe('HandleOutgoing tests', () => {
-    it('should log an error and throw if the packet has no payload', () => {
-      expect(() => {
-        physicalLayer.handleOutgoing(mockOutgoingPacket);
-      }).toThrow('Payload can not be empty');
 
+    // Mock the handleIncoming to prevent loopback in tests
+    jest.spyOn(physicalLayer, 'handleIncoming').mockImplementation(() => {});
+  });
+
+  describe('handleOutgoing', () => {
+    let mockPacket: jest.Mocked<BasePacket>;
+
+    beforeEach(() => {
+      mockPacket = {
+        payload: 'test payload',
+        metadata: {
+          currentLayer: LayerLevel.NETWORK,
+        },
+      } as unknown as jest.Mocked<BasePacket>;
+    });
+
+    it('should throw an error if payload is not a string', () => {
+      (mockPacket as any).payload = 12345;
+      expect(() => physicalLayer.handleOutgoing(mockPacket)).toThrow(
+        'Payload must be a string.',
+      );
       expect(mockLogger.log).toHaveBeenCalledWith(
-        LayerLevel.DATA_LINK,
-        'Payload can not be empty',
+        LayerLevel.PHYSICAL,
+        'Payload must be a string.',
         LogLevel.ERROR,
       );
     });
 
-    it('should serialize the packet, log info, and pass it to handleIncoming', () => {
-      mockOutgoingPacket.payload = 'Hello World';
-
-      physicalLayer.handleOutgoing(mockOutgoingPacket);
-
+    it('should process a valid string payload', () => {
+      physicalLayer.handleOutgoing(mockPacket);
       expect(mockLogger.log).toHaveBeenCalledWith(
         LayerLevel.PHYSICAL,
         'Handling outgoing packet.',
         LogLevel.INFO,
       );
-
       expect(mockLogger.log).toHaveBeenCalledWith(
-        LayerLevel.APPLICATION,
+        LayerLevel.PHYSICAL,
         expect.stringContaining('Transmitting'),
         LogLevel.INFO,
       );
-
-      expect(mockOutgoingPacket.metadata.currentLayer).toBe(
-        LayerLevel.PHYSICAL,
-      );
+      expect(mockPacket.metadata.currentLayer).toBe(LayerLevel.PHYSICAL);
     });
   });
 
-  describe('HandleIncoming Tests', () => {
-    it('Should create the packet object', () => {
+  describe('handleIncoming', () => {
+    let mockPacket: jest.Mocked<BasePacket>;
+
+    beforeEach(() => {
+      (physicalLayer.handleIncoming as jest.Mock).mockRestore();
+
+      mockPacket = {
+        payload: null,
+        setPayload: jest.fn(),
+        metadata: {},
+      } as unknown as jest.Mocked<BasePacket>;
+    });
+
+    it('should correctly handle a valid incoming payload', () => {
       const incomingPayload = '0101010101';
-
-      physicalLayer.handleIncoming(mockIncomingPacket, incomingPayload);
-
-      expect(mockIncomingPacket.setPayload).toHaveBeenCalled();
+      physicalLayer.handleIncoming(mockPacket, incomingPayload);
+      expect(mockPacket.setPayload).toHaveBeenCalledWith(incomingPayload);
+      expect(mockPacket.metadata.currentLayer).toBe(LayerLevel.PHYSICAL);
+      expect(mockLogger.log).toHaveBeenCalledWith(
+        LayerLevel.PHYSICAL,
+        'Handling incoming packet.',
+        LogLevel.INFO,
+      );
+      expect(mockLogger.log).toHaveBeenCalledWith(
+        LayerLevel.PHYSICAL,
+        'Received raw data.',
+        LogLevel.INFO,
+      );
     });
   });
 });
