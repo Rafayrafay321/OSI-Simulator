@@ -71,6 +71,7 @@ export interface ApplicationLayerData {
 export interface TransportLayerData {
   underlyingProtocol: string;
   srcPort: number;
+  packetId?: string;
   destPort: number;
   checkSum?: number;
   segmentIndex: number;

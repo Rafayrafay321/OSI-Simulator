@@ -3,7 +3,6 @@ import { jest, it, expect, describe, beforeEach } from '@jest/globals';
 
 // Custom imports
 import { NetworkLayer } from '../src/layers/networkLayer_3';
-import { DataLinkLayer } from '../src/layers/dataLinkLayer_2';
 import { BasePacket } from '../src/core/Packet';
 import { Logger } from '../src/core/Logger';
 import * as env from '../src/config/env';
