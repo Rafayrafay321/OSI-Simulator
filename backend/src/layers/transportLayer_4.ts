@@ -144,7 +144,6 @@ export class TransportLayer {
     const header = packet.getHeader() as TransportLayerData;
     const payload = packet.payload as string;
 
-    // Step 1: Verify Checksum
     const expectedChecksum = calculateChecksum(payload);
     if (header.checkSum !== expectedChecksum) {
       const errorMsg = `Invalid checksum. Expected ${expectedChecksum}, but got ${header.checkSum}. Packet is corrupted.`;
