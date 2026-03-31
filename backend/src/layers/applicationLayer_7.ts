@@ -1,43 +1,58 @@
 // Custom Import
 import { BasePacket } from '../core/Packet';
 import { ApplicationLayerData, LayerLevel, LogLevel } from '../types';
-import { TransportLayer } from './transportLayer_4';
 import { Logger } from '../core/Logger';
 
 export class ApplicationLayer {
   public protocol: string;
   public method: string;
-  public sender: string;
   private logger: Logger;
 
-  constructor(options: ApplicationLayerData, logger: Logger) {
+  constructor(options: Omit<ApplicationLayerData, 'contentType'>, logger: Logger) {
     this.protocol = options.protocol;
     this.method = options.method;
-    this.sender = options.sender;
     this.logger = logger;
   }
-  // TODO Add validation for outgoingPaylaod.
-  handleOutgoing = (packet: BasePacket, outgoingPayload: string): void => {
+
+  handleOutgoing = (packet: BasePacket, outgoingPayload: object): void => {
     this.logger.log(
       LayerLevel.APPLICATION,
-      `Sending outgoingPayload: ${outgoingPayload.substring(0, 30)}...`,
+      `Encoding outgoing payload to JSON...`,
       LogLevel.INFO,
     );
-    packet.setPayload(outgoingPayload);
+    const payloadString = JSON.stringify(outgoingPayload);
+    packet.setPayload(payloadString);
+
     packet.addHeader(LayerLevel.APPLICATION, {
       protocol: this.protocol,
       method: this.method,
-      sender: this.sender,
+      contentType: 'application/json',
     });
   };
-  handleIncomming = (packet: BasePacket) => {
-    // const header = packet.getHeader(LayerLevel.APPLICATION);
-    // if (header) {
-    //   this.logger.log(
-    //     LayerLevel.APPLICATION,
-    //     `Received outgoingPayload: ${packet.getoutgoingPayload().substring(0, 30)}...`,
-    //     LogLevel.INFO,
-    //   );
-    // }
+
+  handleIncoming = (packet: BasePacket): object | null => {
+    const payload = packet.getPayload();
+    if (!payload) {
+      return null;
+    }
+
+    this.logger.log(
+      LayerLevel.APPLICATION,
+      `Parsing incoming JSON payload...`,
+      LogLevel.INFO,
+    );
+
+    try {
+      const parsedPayload = JSON.parse(payload);
+      packet.removeHeader(LayerLevel.APPLICATION);
+      return parsedPayload;
+    } catch (error) {
+      this.logger.log(
+        LayerLevel.APPLICATION,
+        `Error parsing incoming JSON payload: ${error}`,
+        LogLevel.ERROR,
+      );
+      throw new Error('Failed to parse incoming JSON payload.');
+    }
   };
 }

@@ -53,6 +53,10 @@ export interface LogEntry {
   type: LogLevel;
 }
 
+export type payloadObject = {
+  message: string;
+};
+
 export interface ILayer {
   name: string;
   level: LayerLevel;
@@ -65,7 +69,7 @@ export interface ILayer {
 export interface ApplicationLayerData {
   protocol: string;
   method: string;
-  sender: string;
+  contentType?: string;
 }
 
 export interface TransportLayerData {

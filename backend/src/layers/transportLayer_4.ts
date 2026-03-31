@@ -189,9 +189,12 @@ export class TransportLayer {
 
       const finalPayload = buffer.map((p) => p.payload).join('');
 
-      const finalPacket = packet;
-      finalPacket.setPayload(finalPayload);
-      finalPacket.removeHeader(LayerLevel.TRANSPORT);
+      const firstSegment = buffer[0];
+      const reassembledPacket = new BasePacket();
+      reassembledPacket.headers = [...firstSegment.headers];
+
+      reassembledPacket.setPayload(finalPayload);
+      reassembledPacket.removeHeader(LayerLevel.TRANSPORT);
 
       this.segmentBuffer.delete(packetId);
 
@@ -201,7 +204,7 @@ export class TransportLayer {
         LogLevel.INFO,
       );
 
-      return finalPacket;
+      return reassembledPacket;
     }
     return null;
   }
