@@ -13,7 +13,6 @@ import {
 } from '../types';
 import { BasePacket } from '../core/Packet';
 
-// This checksum function now matches the simplified version used in the tests.
 export const calculateChecksum = (payload: string): number => {
   if (!payload) return 0;
   return payload.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
@@ -42,7 +41,7 @@ export class TransportLayer {
     newSegmentPacket.headers = [...addBaseSegmentPacketHeaders];
   }
 
-  public handleOutgoing(packet: BasePacket) {
+  public handleOutgoing(packet: BasePacket): BasePacket | BasePacket[] {
     if (!packet.payload) {
       this.logger.log(
         LayerLevel.TRANSPORT,
@@ -64,6 +63,7 @@ export class TransportLayer {
     if (payloadLength > MSS) {
       const packetId = crypto.randomUUID();
       const noOfSegments = Math.ceil(payloadLength / MSS);
+      const segmentsList: BasePacket[] = [];
       this.logger.log(
         LayerLevel.TRANSPORT,
         `Payload > MSS. Segmenting into ${noOfSegments} segments.`,
@@ -106,7 +106,9 @@ export class TransportLayer {
           `Passing segment ${i + 1} to Network Layer.`,
           LogLevel.INFO,
         );
+        segmentsList.push(newSegmentPacket);
       }
+      return segmentsList;
     } else {
       const headerData: Omit<TransportLayerData, 'checkSum'> = {
         underlyingProtocol: this.underlyingProtocol,
@@ -132,6 +134,7 @@ export class TransportLayer {
         'Passing packet to Network Layer.',
         LogLevel.INFO,
       );
+      return packet;
     }
   }
 
@@ -192,6 +195,7 @@ export class TransportLayer {
       const firstSegment = buffer[0];
       const reassembledPacket = new BasePacket();
       reassembledPacket.headers = [...firstSegment.headers];
+      reassembledPacket.metadata = { ...firstSegment.metadata };
 
       reassembledPacket.setPayload(finalPayload);
       reassembledPacket.removeHeader(LayerLevel.TRANSPORT);

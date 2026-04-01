@@ -60,8 +60,11 @@ export type payloadObject = {
 export interface ILayer {
   name: string;
   level: LayerLevel;
-  handleOutgoing: (packet: BasePacket) => void;
-  handleIncoming: (packet: BasePacket, incomingPayload?: string) => void;
+  handleOutgoing: (packet: BasePacket) => BasePacket | BasePacket[] | null;
+  handleIncoming: (
+    packet: BasePacket,
+    incomingPayload?: string,
+  ) => BasePacket | null;
 }
 
 //TODO Specific headers for layer.

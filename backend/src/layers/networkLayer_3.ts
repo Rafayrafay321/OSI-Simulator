@@ -43,7 +43,7 @@ export class NetworkLayer {
     this.routingTable = routingTable;
     this.logger = logger;
   }
-  public handleOutgoing(packet: BasePacket) {
+  public handleOutgoing(packet: BasePacket): BasePacket | BasePacket[] {
     if (!packet.payload) {
       this.logger.log(
         LayerLevel.NETWORK,
@@ -64,6 +64,7 @@ export class NetworkLayer {
 
     if (currentPacketSize > MTU) {
       const MaxFragmentData = MTU - ipHeaderSize;
+      const fragmentsList: BasePacket[] = [];
       const noOfFragments = Math.ceil(payloadSize / MaxFragmentData);
       const newFragmentId = crypto.randomUUID();
       this.logger.log(
@@ -74,7 +75,7 @@ export class NetworkLayer {
 
       for (let i = 0; i < noOfFragments; i++) {
         const lowerIndex = MaxFragmentData * i;
-        const upperIndex = Math.min(lowerIndex + MTU, currentPacketSize);
+        const upperIndex = Math.min(lowerIndex + MTU, packet.payload.length);
         const currentFragmentData = packet.payload.substring(
           lowerIndex,
           upperIndex,
@@ -105,7 +106,10 @@ export class NetworkLayer {
           `Passing fragment ${i + 1} to Data Link Layer.`,
           LogLevel.INFO,
         );
+
+        fragmentsList.push(newFragmentPacket);
       }
+      return fragmentsList;
     } else {
       packet.addHeader(LayerLevel.NETWORK, {
         id: this.id,
@@ -128,10 +132,12 @@ export class NetworkLayer {
         'Passing packet to Data Link Layer.',
         LogLevel.INFO,
       );
+
+      return packet;
     }
   }
 
-  public handleIncoming(packet: BasePacket) {
+  public handleIncoming(packet: BasePacket): BasePacket | null {
     this.logger.log(
       LayerLevel.NETWORK,
       'Handling incoming packet.',
@@ -145,14 +151,10 @@ export class NetworkLayer {
     if (moreFragmentFlag === 1) {
       if (!this.fragmentBuffer.has(fragmentId)) {
         this.fragmentBuffer.set(fragmentId, [packet]);
-        return;
       } else {
-        const existingArray = this.fragmentBuffer.get(
-          fragmentId,
-        ) as BasePacket[];
-        existingArray.push(packet);
-        return;
+        (this.fragmentBuffer.get(fragmentId) as BasePacket[]).push(packet);
       }
+      return null;
     }
     if (this.fragmentBuffer.has(fragmentId)) {
       let allFragmentPaylaods: string[] = [];
@@ -170,7 +172,7 @@ export class NetworkLayer {
         }
         allFragmentPaylaods.push(packet.payload as string);
       }
-      const finalPaylaod = allFragmentPaylaods.join(' ');
+      const finalPaylaod = allFragmentPaylaods.join('');
       this.fragmentBuffer.delete(fragmentId);
       packet.setPayload(finalPaylaod);
     }

@@ -51,7 +51,7 @@ export class DataLinkLayer {
     return finalCheckSum;
   }
 
-  public handleOutgoing(packet: BasePacket) {
+  public handleOutgoing(packet: BasePacket): BasePacket {
     if (!packet.payload) {
       this.logger.log(
         LayerLevel.DATA_LINK,
@@ -113,9 +113,10 @@ export class DataLinkLayer {
       'Passing packet to Physical Layer.',
       LogLevel.INFO,
     );
+    return packet;
   }
 
-  public handleIncoming(packet: BasePacket) {
+  public handleIncoming(packet: BasePacket): BasePacket | null {
     const BROADCAST_MAC_ADDRESS = env.BOARDCAST_MAC_ADD;
     this.logger.log(
       LayerLevel.DATA_LINK,
@@ -156,7 +157,7 @@ export class DataLinkLayer {
         'Dropping packet for incorrect MAC',
         LogLevel.INFO,
       );
-      return;
+      return null;
     } else if (DataLinkLayerHeaders.destMac === BROADCAST_MAC_ADDRESS) {
       this.logger.log(
         LayerLevel.DATA_LINK,
@@ -181,7 +182,7 @@ export class DataLinkLayer {
         'CheckSum Failed. Cant proceed Further.',
         LogLevel.ERROR,
       );
-      return;
+      return null;
     }
     // Remove DataLink headers
     packet.removeHeader(LayerLevel.DATA_LINK);

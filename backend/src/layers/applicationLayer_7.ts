@@ -8,13 +8,19 @@ export class ApplicationLayer {
   public method: string;
   private logger: Logger;
 
-  constructor(options: Omit<ApplicationLayerData, 'contentType'>, logger: Logger) {
+  constructor(
+    options: Omit<ApplicationLayerData, 'contentType'>,
+    logger: Logger,
+  ) {
     this.protocol = options.protocol;
     this.method = options.method;
     this.logger = logger;
   }
 
-  handleOutgoing = (packet: BasePacket, outgoingPayload: object): void => {
+  handleOutgoing = (
+    packet: BasePacket,
+    outgoingPayload: object,
+  ): BasePacket | BasePacket[] => {
     this.logger.log(
       LayerLevel.APPLICATION,
       `Encoding outgoing payload to JSON...`,
@@ -28,6 +34,7 @@ export class ApplicationLayer {
       method: this.method,
       contentType: 'application/json',
     });
+    return packet;
   };
 
   handleIncoming = (packet: BasePacket): object | null => {

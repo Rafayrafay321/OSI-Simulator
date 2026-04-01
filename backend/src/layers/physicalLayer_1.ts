@@ -37,6 +37,7 @@ export class PhysicalLayer {
 
     // Loopback for simulation. In a real scenario, this would be an external interface.
     this.handleIncoming(packet, packet.payload);
+    return packet;
   }
 
   public handleIncoming(packet: BasePacket, incomingPayload: string) {
@@ -49,5 +50,6 @@ export class PhysicalLayer {
     packet.metadata.currentLayer = LayerLevel.PHYSICAL;
 
     this.logger.log(LayerLevel.PHYSICAL, 'Received raw data.', LogLevel.INFO);
+    return packet;
   }
 }

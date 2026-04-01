@@ -42,6 +42,33 @@ export class NetworkStack {
     layerToProcess.handleOutgoing(packet);
   }
 
+  private recursiveSend(
+    packet: BasePacket,
+    layerIndex: number,
+    layer: ILayer[],
+  ): void {
+    if (layerIndex >= layer.length) {
+      return;
+    }
+    let currentLayer = layer[layerIndex];
+    this.logger.log(
+      currentLayer.level,
+      `Sending data down through ${currentLayer.name}`,
+      LogLevel.INFO,
+    );
+    const result = currentLayer.handleOutgoing(packet);
+
+    if (!result) return;
+
+    if (Array.isArray(result)) {
+      for (const segment of result) {
+        this.recursiveSend(segment, layerIndex + 1, layer);
+      }
+    } else {
+      return this.recursiveSend(result, layerIndex + 1, layer);
+    }
+  }
+
   public sendData(packet: BasePacket) {
     const layerWeights: Partial<Record<LayerLevel, number>> = {
       [LayerLevel.APPLICATION]: 7,
@@ -51,19 +78,10 @@ export class NetworkStack {
       [LayerLevel.PHYSICAL]: 1,
     };
 
-    const allLayers = Array.from(this.layers.values());
-    allLayers.sort(
+    const allSortedLayers = Array.from(this.layers.values()).sort(
       (a, b) => (layerWeights[b.level] || 0) - (layerWeights[a.level] || 0),
     );
-
-    for (const layer of allLayers) {
-      this.logger.log(
-        layer.level,
-        `Sending data down through ${layer.name}`,
-        LogLevel.INFO,
-      );
-      layer.handleOutgoing(packet);
-    }
+    this.recursiveSend(packet, 0, allSortedLayers);
   }
 
   public receiveData(packet: BasePacket) {
@@ -80,13 +98,17 @@ export class NetworkStack {
       (a, b) => (layerWeights[a.level] || 0) - (layerWeights[b.level] || 0),
     );
 
+    let currentPacket: BasePacket | null = packet;
+
     for (const layer of allLayers) {
+      if (!currentPacket) break;
+
       this.logger.log(
         layer.level,
         `Sending data Up through ${layer.name}`,
         LogLevel.INFO,
       );
-      layer.handleIncoming(packet);
+      currentPacket = layer.handleIncoming(currentPacket);
     }
   }
 }
