@@ -132,7 +132,7 @@ describe('Network Layer Tests', () => {
     it('Should buffer the large fragmented packet', () => {
       mockPacket.getHeader.mockReturnValueOnce(createMockHeader({ MFflag: 1 }));
       const result = networkLayer.handleIncoming(mockPacket);
-      expect(result).toBeUndefined();
+      expect(result).toBeNull();
       expect(mockPacket.removeHeader).not.toHaveBeenCalled();
     });
 
@@ -148,15 +148,20 @@ describe('Network Layer Tests', () => {
         createMockHeader({ id: 'set-1', MFflag: 0, fragmentOffSet: 5 }),
       );
       fragment2.payload = 'World';
+      fragment2.setPayload.mockImplementation(function (
+        this: { payload: string },
+        newPayload: string,
+      ) {
+        this.payload = newPayload;
+      });
 
       const resultOfF1 = networkLayer.handleIncoming(fragment1);
       const resultOfF2 = networkLayer.handleIncoming(fragment2);
 
-      expect(resultOfF1).toBeUndefined();
-
-      expect(resultOfF2).toBeDefined();
+      expect(resultOfF1).toBeNull();
+      expect(resultOfF2).not.toBeNull();
       expect(resultOfF2).toBe(fragment2);
-      expect(resultOfF2!.payload).toBe('Hello World');
+      expect(resultOfF2!.payload).toBe('HelloWorld');
     });
   });
 });

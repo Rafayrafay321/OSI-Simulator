@@ -84,7 +84,7 @@ export class NetworkStack {
     this.recursiveSend(packet, 0, allSortedLayers);
   }
 
-  public receiveData(packet: BasePacket) {
+  public receiveData(packet: BasePacket): BasePacket | null {
     const layerWeights: Partial<Record<LayerLevel, number>> = {
       [LayerLevel.APPLICATION]: 7,
       [LayerLevel.TRANSPORT]: 4,
@@ -110,5 +110,6 @@ export class NetworkStack {
       );
       currentPacket = layer.handleIncoming(currentPacket);
     }
+    return currentPacket;
   }
 }

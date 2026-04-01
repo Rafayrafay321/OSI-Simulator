@@ -106,7 +106,14 @@ export class Orchestrator {
         `Transmission: ${hostA.networkLayer.srcIp} -> ${hostB.networkLayer.srcIp}`,
         LogLevel.INFO,
       );
-      hostB.stack.receiveData(packet.clone());
+      const finalPacket = hostB.stack.receiveData(packet.clone());
+      if (finalPacket) {
+        this.logger.log(
+          LayerLevel.APPLICATION,
+          `Host B received final payload: ${finalPacket.getPayload()}`,
+          LogLevel.SUCCESS,
+        );
+      }
     };
 
     hostB.physicalLayer.onDataTransmit = (packet) => {
@@ -115,8 +122,19 @@ export class Orchestrator {
         `Transmission: ${hostB.networkLayer.srcIp} -> ${hostA.networkLayer.srcIp}`,
         LogLevel.INFO,
       );
-      hostA.stack.receiveData(packet.clone());
+      const finalPacket = hostA.stack.receiveData(packet.clone());
+      if (finalPacket) {
+        this.logger.log(
+          LayerLevel.APPLICATION,
+          `Host A received final payload: ${finalPacket.getPayload()}`,
+          LogLevel.SUCCESS,
+        );
+      }
     };
+  }
+
+  public getLogs() {
+    return this.logger.getLogs();
   }
 
   public runSimulation() {

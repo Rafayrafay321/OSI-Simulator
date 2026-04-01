@@ -84,8 +84,8 @@ describe('NetworkStack Tests', () => {
     const mockLayer: ILayer = {
       name: 'testLayer',
       level: LayerLevel.APPLICATION,
-      handleOutgoing: jest.fn(),
-      handleIncoming: jest.fn(),
+      handleOutgoing: jest.fn((packet: BasePacket) => null),
+      handleIncoming: jest.fn((packet: BasePacket) => null),
     };
     networkStack.registerLayer(mockLayer);
 
@@ -130,6 +130,7 @@ describe('NetworkStack Tests', () => {
     ];
     layersList.forEach((layer) => {
       networkStack.registerLayer(layer);
+      layer.handleOutgoing.mockReturnValue(mockPacket);
     });
 
     networkStack.sendData(mockPacket);
@@ -145,18 +146,23 @@ describe('NetworkStack Tests', () => {
 
     mockApplicationLayer.handleOutgoing.mockImplementation(() => {
       callOrder.push('Application Layer');
+      return mockPacket;
     });
     mockTransportLayer.handleOutgoing.mockImplementation(() => {
       callOrder.push('Transport Layer');
+      return mockPacket;
     });
     mockNetworkLayer.handleOutgoing.mockImplementation(() => {
       callOrder.push('Network Layer');
+      return mockPacket;
     });
     mockDataLinkLayer.handleOutgoing.mockImplementation(() => {
       callOrder.push('Data Link Layer');
+      return mockPacket;
     });
     mockPhysicalLayer.handleOutgoing.mockImplementation(() => {
       callOrder.push('Physical Layer');
+      return mockPacket;
     });
 
     const layersList = [
@@ -186,18 +192,23 @@ describe('NetworkStack Tests', () => {
 
     mockApplicationLayer.handleIncoming.mockImplementation(() => {
       callOrder.push('Application Layer');
+      return mockPacket;
     });
     mockTransportLayer.handleIncoming.mockImplementation(() => {
       callOrder.push('Transport Layer');
+      return mockPacket;
     });
     mockNetworkLayer.handleIncoming.mockImplementation(() => {
       callOrder.push('Network Layer');
+      return mockPacket;
     });
     mockDataLinkLayer.handleIncoming.mockImplementation(() => {
       callOrder.push('Data Link Layer');
+      return mockPacket;
     });
     mockPhysicalLayer.handleIncoming.mockImplementation(() => {
       callOrder.push('Physical Layer');
+      return mockPacket;
     });
 
     const layersList = [

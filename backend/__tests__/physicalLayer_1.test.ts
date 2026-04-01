@@ -26,9 +26,6 @@ describe('PhysicalLayer', () => {
       log: jest.fn(),
     } as unknown as jest.Mocked<Logger>;
     physicalLayer = new PhysicalLayer(mockLogger);
-
-    // Mock the handleIncoming to prevent loopback in tests
-    jest.spyOn(physicalLayer, 'handleIncoming').mockImplementation(() => {});
   });
 
   describe('handleOutgoing', () => {
@@ -75,8 +72,6 @@ describe('PhysicalLayer', () => {
     let mockPacket: jest.Mocked<BasePacket>;
 
     beforeEach(() => {
-      (physicalLayer.handleIncoming as jest.Mock).mockRestore();
-
       mockPacket = {
         payload: null,
         setPayload: jest.fn(),

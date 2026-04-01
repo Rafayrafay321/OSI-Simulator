@@ -24,13 +24,14 @@ describe('Application Layer Tests', () => {
 
   describe('handleOutgoing', () => {
     it('should stringify an object payload and add the correct headers', () => {
+      const payloadObject = { message: 'Hello, World!', status: 'ok' };
       const mockPacket = {
+        getPayload: jest.fn().mockReturnValue(payloadObject),
         setPayload: jest.fn(),
         addHeader: jest.fn(),
       } as unknown as jest.Mocked<BasePacket>;
 
-      const payloadObject = { message: 'Hello, World!', status: 'ok' };
-      applicationLayer.handleOutgoing(mockPacket, payloadObject);
+      applicationLayer.handleOutgoing(mockPacket);
 
       expect(mockPacket.setPayload).toHaveBeenCalledWith(
         JSON.stringify(payloadObject),
@@ -51,15 +52,21 @@ describe('Application Layer Tests', () => {
   describe('handleIncoming', () => {
     it('should parse a valid JSON string payload into an object', () => {
       const payloadObject = { message: 'Hello, World!', status: 'ok' };
+      const payloadString = JSON.stringify(payloadObject);
 
       const mockPacket = {
-        getPayload: jest.fn().mockReturnValue(JSON.stringify(payloadObject)),
+        getPayload: jest.fn().mockReturnValue(payloadString),
+        setPayload: jest.fn(),
         removeHeader: jest.fn(),
       } as unknown as jest.Mocked<BasePacket>;
 
       const result = applicationLayer.handleIncoming(mockPacket);
 
-      expect(result).toEqual(payloadObject);
+      expect(result).toBe(mockPacket);
+      // setPayload should not be called.
+      expect(mockPacket.setPayload).not.toHaveBeenCalled();
+      // The payload should be unchanged.
+      expect(result!.getPayload()).toBe(payloadString);
       expect(mockPacket.removeHeader).toHaveBeenCalledWith(
         LayerLevel.APPLICATION,
       );
@@ -69,6 +76,7 @@ describe('Application Layer Tests', () => {
       const invalidJsonString = '{"message": "Incomplete,';
       const mockPacket = {
         getPayload: jest.fn().mockReturnValue(invalidJsonString),
+        setPayload: jest.fn(),
         removeHeader: jest.fn(),
       } as unknown as jest.Mocked<BasePacket>;
 

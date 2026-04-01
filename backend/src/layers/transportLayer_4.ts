@@ -44,9 +44,7 @@ export class TransportLayer implements ILayer {
     newSegmentPacket.headers = [...addBaseSegmentPacketHeaders];
   }
 
-  public handleOutgoing(
-    packet: BasePacket,
-  ): BasePacket | BasePacket[] | null {
+  public handleOutgoing(packet: BasePacket): BasePacket | BasePacket[] | null {
     if (!packet.payload) {
       this.logger.log(
         LayerLevel.TRANSPORT,
@@ -175,7 +173,7 @@ export class TransportLayer implements ILayer {
       this.segmentBuffer.set(packetId, []);
     }
     const buffer = this.segmentBuffer.get(packetId) as BasePacket[];
-.
+
     buffer.push(packet);
     this.logger.log(
       LayerLevel.TRANSPORT,

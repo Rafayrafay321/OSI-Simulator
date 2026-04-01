@@ -39,27 +39,34 @@ export class PhysicalLayer implements ILayer {
     );
     packet.metadata.currentLayer = LayerLevel.PHYSICAL;
 
-    // Loopback for simulation. In a real scenario, this would be an external interface.
-    this.handleIncoming(packet, packet.payload);
-    return packet;
+    if (this.onDataTransmit) {
+      this.onDataTransmit(packet);
+    }
+
+    return null;
   }
 
   public handleIncoming(
     packet: BasePacket,
     incomingPayload?: string,
   ): BasePacket | null {
-    if (!incomingPayload) {
-      return null;
-    }
     this.logger.log(
       LayerLevel.PHYSICAL,
       'Handling incoming packet.',
       LogLevel.INFO,
     );
-    packet.setPayload(incomingPayload);
-    packet.metadata.currentLayer = LayerLevel.PHYSICAL;
 
-    this.logger.log(LayerLevel.PHYSICAL, 'Received raw data.', LogLevel.INFO);
+    if (incomingPayload) {
+      packet.setPayload(incomingPayload);
+      this.logger.log(
+        LayerLevel.PHYSICAL,
+        'Received raw data.',
+        LogLevel.INFO,
+      );
+    }
+    // In a real simulation, we would deserialize the payload here.
+    // Since we are passing the BasePacket object directly, we just pass it on.
+    packet.metadata.currentLayer = LayerLevel.PHYSICAL;
     return packet;
   }
 }
