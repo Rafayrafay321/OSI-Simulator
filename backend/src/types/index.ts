@@ -1,4 +1,8 @@
+import { NetworkStack } from '../core/NetworkStack';
 import { BasePacket } from '../core/Packet';
+import { ApplicationLayer } from '../layers/applicationLayer_7';
+import { NetworkLayer } from '../layers/networkLayer_3';
+import { PhysicalLayer } from '../layers/physicalLayer_1';
 
 //Enum for PacketDirection in Metadata
 export enum PacketDirection {
@@ -106,6 +110,13 @@ export interface DataLinkLayerData {
   destMac: string;
   etherType: number;
   trailer: number;
+}
+
+export interface Host {
+  stack: NetworkStack;
+  applicationLayer: ApplicationLayer;
+  networkLayer: NetworkLayer;
+  physicalLayer: PhysicalLayer;
 }
 export type LayerData =
   | ApplicationLayerData

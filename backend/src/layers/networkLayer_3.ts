@@ -6,6 +6,7 @@ import { Logger } from '../core/Logger';
 
 // Types and interfaces
 import {
+  ILayer,
   LayerLevel,
   NetworkLayerData,
   PacketStatus,
@@ -14,7 +15,9 @@ import {
 } from '../types';
 import { BasePacket } from '../core/Packet';
 
-export class NetworkLayer {
+export class NetworkLayer implements ILayer {
+  public name = 'Network Layer';
+  public level = LayerLevel.NETWORK;
   public id: string;
   public srcIp: string;
   public destIp: string;
@@ -43,7 +46,7 @@ export class NetworkLayer {
     this.routingTable = routingTable;
     this.logger = logger;
   }
-  public handleOutgoing(packet: BasePacket): BasePacket | BasePacket[] {
+  public handleOutgoing(packet: BasePacket): BasePacket | BasePacket[] | null {
     if (!packet.payload) {
       this.logger.log(
         LayerLevel.NETWORK,

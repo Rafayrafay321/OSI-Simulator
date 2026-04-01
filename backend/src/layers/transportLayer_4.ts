@@ -6,6 +6,7 @@ import { Logger } from '../core/Logger';
 import {
   PacketStatus,
   TransportLayerData,
+  ILayer,
   LayerLevel,
   PacketDirection,
   Header,
@@ -18,7 +19,9 @@ export const calculateChecksum = (payload: string): number => {
   return payload.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
 };
 
-export class TransportLayer {
+export class TransportLayer implements ILayer {
+  public name = 'Transport Layer';
+  public level = LayerLevel.TRANSPORT;
   public underlyingProtocol: string;
   public srcPort: number;
   public destPort: number;
@@ -41,7 +44,9 @@ export class TransportLayer {
     newSegmentPacket.headers = [...addBaseSegmentPacketHeaders];
   }
 
-  public handleOutgoing(packet: BasePacket): BasePacket | BasePacket[] {
+  public handleOutgoing(
+    packet: BasePacket,
+  ): BasePacket | BasePacket[] | null {
     if (!packet.payload) {
       this.logger.log(
         LayerLevel.TRANSPORT,
@@ -170,6 +175,7 @@ export class TransportLayer {
       this.segmentBuffer.set(packetId, []);
     }
     const buffer = this.segmentBuffer.get(packetId) as BasePacket[];
+.
     buffer.push(packet);
     this.logger.log(
       LayerLevel.TRANSPORT,

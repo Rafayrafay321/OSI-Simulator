@@ -1,9 +1,13 @@
 import { BasePacket } from '../core/Packet';
 import { Logger } from '../core/Logger';
-import { LayerLevel, LogLevel } from '../types';
+import { ILayer, LayerLevel, LogLevel } from '../types';
 
-export class PhysicalLayer {
+export class PhysicalLayer implements ILayer {
+  public name = 'Physical Layer';
+  public level = LayerLevel.PHYSICAL;
   private logger: Logger;
+
+  public onDataTransmit?: (packet: BasePacket) => void;
 
   constructor(logger: Logger) {
     this.logger = logger;
@@ -14,7 +18,7 @@ export class PhysicalLayer {
     return JSON.stringify(packet);
   }
 
-  public handleOutgoing(packet: BasePacket) {
+  public handleOutgoing(packet: BasePacket): BasePacket | null {
     if (typeof packet.payload !== 'string') {
       const errorMsg = 'Payload must be a string.';
       this.logger.log(LayerLevel.PHYSICAL, errorMsg, LogLevel.ERROR);
@@ -40,7 +44,13 @@ export class PhysicalLayer {
     return packet;
   }
 
-  public handleIncoming(packet: BasePacket, incomingPayload: string) {
+  public handleIncoming(
+    packet: BasePacket,
+    incomingPayload?: string,
+  ): BasePacket | null {
+    if (!incomingPayload) {
+      return null;
+    }
     this.logger.log(
       LayerLevel.PHYSICAL,
       'Handling incoming packet.',

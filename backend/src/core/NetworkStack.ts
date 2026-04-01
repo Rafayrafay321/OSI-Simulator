@@ -65,7 +65,7 @@ export class NetworkStack {
         this.recursiveSend(segment, layerIndex + 1, layer);
       }
     } else {
-      return this.recursiveSend(result, layerIndex + 1, layer);
+      this.recursiveSend(result, layerIndex + 1, layer);
     }
   }
 

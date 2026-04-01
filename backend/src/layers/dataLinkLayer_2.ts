@@ -5,13 +5,16 @@ import { env } from '../config/env';
 // Types
 import {
   DataLinkLayerData,
+  ILayer,
   LayerLevel,
   DataLinkLayerOptions,
   LogLevel,
 } from '../types';
 import { BasePacket } from '../core/Packet';
 
-export class DataLinkLayer {
+export class DataLinkLayer implements ILayer {
+  public name = 'Data Link Layer';
+  public level = LayerLevel.DATA_LINK;
   public srcMac: string;
   public etherType: number;
   private arpCache: Map<string, string>;
@@ -51,7 +54,7 @@ export class DataLinkLayer {
     return finalCheckSum;
   }
 
-  public handleOutgoing(packet: BasePacket): BasePacket {
+  public handleOutgoing(packet: BasePacket): BasePacket | null {
     if (!packet.payload) {
       this.logger.log(
         LayerLevel.DATA_LINK,

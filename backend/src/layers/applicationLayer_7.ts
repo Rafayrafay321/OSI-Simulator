@@ -1,9 +1,16 @@
 // Custom Import
 import { BasePacket } from '../core/Packet';
-import { ApplicationLayerData, LayerLevel, LogLevel } from '../types';
+import {
+  ApplicationLayerData,
+  ILayer,
+  LayerLevel,
+  LogLevel,
+} from '../types';
 import { Logger } from '../core/Logger';
 
-export class ApplicationLayer {
+export class ApplicationLayer implements ILayer {
+  public name = 'Application Layer';
+  public level = LayerLevel.APPLICATION;
   public protocol: string;
   public method: string;
   private logger: Logger;
@@ -17,17 +24,20 @@ export class ApplicationLayer {
     this.logger = logger;
   }
 
-  handleOutgoing = (
-    packet: BasePacket,
-    outgoingPayload: object,
-  ): BasePacket | BasePacket[] => {
+  handleOutgoing = (packet: BasePacket): BasePacket | BasePacket[] | null => {
+    if (!packet.getPayload()) {
+      this.logger.log(
+        LayerLevel.APPLICATION,
+        'Packet has no payload to be sent',
+        LogLevel.ERROR,
+      );
+      return null;
+    }
     this.logger.log(
       LayerLevel.APPLICATION,
       `Encoding outgoing payload to JSON...`,
       LogLevel.INFO,
     );
-    const payloadString = JSON.stringify(outgoingPayload);
-    packet.setPayload(payloadString);
 
     packet.addHeader(LayerLevel.APPLICATION, {
       protocol: this.protocol,
@@ -37,7 +47,7 @@ export class ApplicationLayer {
     return packet;
   };
 
-  handleIncoming = (packet: BasePacket): object | null => {
+  handleIncoming = (packet: BasePacket): BasePacket | null => {
     const payload = packet.getPayload();
     if (!payload) {
       return null;
@@ -50,9 +60,9 @@ export class ApplicationLayer {
     );
 
     try {
-      const parsedPayload = JSON.parse(payload);
+      JSON.parse(payload);
       packet.removeHeader(LayerLevel.APPLICATION);
-      return parsedPayload;
+      return packet;
     } catch (error) {
       this.logger.log(
         LayerLevel.APPLICATION,

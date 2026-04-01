@@ -1,3 +1,4 @@
+import { NetworkStack } from './NetworkStack';
 import { ApplicationLayer } from '../layers/applicationLayer_7';
 import { TransportLayer } from '../layers/transportLayer_4';
 import { NetworkLayer } from '../layers/networkLayer_3';
@@ -5,55 +6,131 @@ import { DataLinkLayer } from '../layers/dataLinkLayer_2';
 import { PhysicalLayer } from '../layers/physicalLayer_1';
 import { BasePacket } from './Packet';
 import { Logger } from './Logger';
-import { LayerLevel, LogLevel } from '../types';
+import {
+  LayerLevel,
+  LogLevel,
+  PacketDirection,
+  PacketStatus,
+  Host,
+} from '../types';
 
 export class Orchestrator {
-  public host_A: ApplicationLayer;
-  public host_B: ApplicationLayer;
-  public router: NetworkLayer;
+  public host_A: Host;
+  public host_B: Host;
+  // public router: NetworkLayer;
+  private arpCache: Map<string, string> = new Map();
   private logger: Logger;
 
-  constructor(logger: Logger) {
-    this.logger = logger;
-    const macAddressRegistry = new Map<string, string>();
-    macAddressRegistry.set('192.168.1.10', '02:A1:C3:54:7B:9D'); // Host A
-    macAddressRegistry.set('192.168.2.10', '0E:88:2F:C1:B9:44'); // Host B
+  constructor() {
+    this.arpCache.set('192.168.1.10', '02:A1:C3:54:7B:9D'); // Host A
+    this.arpCache.set('192.168.2.10', '0E:88:2F:C1:B9:44'); // Host B
 
-    this.host_A = new ApplicationLayer(
-      {
-        protocol: 'HTTP/1.1',
-        method: 'POST',
-      },
-      this.logger,
+    this.logger = new Logger();
+
+    this.host_A = this.buildHost(
+      'HostA',
+      '192.168.1.10',
+      '02:A1:C3:54:7B:9D',
+      8000,
     );
 
-    this.host_B = new ApplicationLayer(
-      {
-        protocol: 'HTTP/1.1',
-        method: 'POST',
-      },
-      this.logger,
+    this.host_B = this.buildHost(
+      'HostB',
+      '192.168.2.10',
+      '0E:88:2F:C1:B9:44',
+      8001,
     );
-    const routingTable = new Map<string, NetworkLayer>();
-    routingTable.set('192.168.1.10', this.hostANetworkLayer);
-    routingTable.set('192.168.2.10', this.hostBNetworkLayer);
 
-    // Router Instance
-    this.router = new NetworkLayer(
-      {
-        id: '3944jvjjf3',
-        srcIp: '192.168.1.10',
-        destIp: '192.0.2.45',
-        ttl: 64,
-        protocol: 6,
-        DFflag: 1,
-        MFflag: 1,
-        fragmentOffSet: 100,
-      },
-      this.logger,
-      routingTable,
-    );
+    this.connectPhysicalLayers(this.host_A, this.host_B);
   }
 
-  public;
+  private buildHost(
+    name: string,
+    ipAddress: string,
+    macAddress: string,
+    port: number,
+  ): Host {
+    const stack = new NetworkStack(this.logger);
+
+    const applicationLayer = new ApplicationLayer(
+      { protocol: 'HTTPS', method: 'POST' },
+      this.logger,
+    );
+
+    const transportLayer = new TransportLayer(
+      {
+        underlyingProtocol: 'TCP',
+        srcPort: port,
+        destPort: 0, // Will be set dynamically during send
+        segmentIndex: 0,
+        totalSegment: 1,
+      },
+      this.logger,
+    );
+
+    const networkLayer = new NetworkLayer(
+      {
+        id: `net-${name}`,
+        srcIp: ipAddress,
+        destIp: '0.0.0.0', // Will be set dynamically
+        ttl: 64,
+        protocol: 6,
+        DFflag: 0,
+        MFflag: 0,
+        fragmentOffSet: 0,
+      },
+      this.logger,
+    );
+
+    const dataLinkLayer = new DataLinkLayer(
+      { srcMac: macAddress, etherType: 123 },
+      this.arpCache,
+      this.logger,
+    );
+
+    const physicalLayer = new PhysicalLayer(this.logger);
+
+    stack.registerLayer(applicationLayer);
+    stack.registerLayer(transportLayer);
+    stack.registerLayer(networkLayer);
+    stack.registerLayer(dataLinkLayer);
+    stack.registerLayer(physicalLayer);
+
+    return { stack, applicationLayer, networkLayer, physicalLayer };
+  }
+
+  private connectPhysicalLayers(hostA: Host, hostB: Host) {
+    hostA.physicalLayer.onDataTransmit = (packet) => {
+      this.logger.log(
+        LayerLevel.PHYSICAL,
+        `Transmission: ${hostA.networkLayer.srcIp} -> ${hostB.networkLayer.srcIp}`,
+        LogLevel.INFO,
+      );
+      hostB.stack.receiveData(packet.clone());
+    };
+
+    hostB.physicalLayer.onDataTransmit = (packet) => {
+      this.logger.log(
+        LayerLevel.PHYSICAL,
+        `Transmission: ${hostB.networkLayer.srcIp} -> ${hostA.networkLayer.srcIp}`,
+        LogLevel.INFO,
+      );
+      hostA.stack.receiveData(packet.clone());
+    };
+  }
+
+  public runSimulation() {
+    const packet = new BasePacket();
+    packet.setPayload('Hello Host B, this is Host A!');
+
+    packet.metadata = {
+      currentLayer: LayerLevel.APPLICATION,
+      direction: PacketDirection.SENDER_TO_RECEIVER,
+      status: PacketStatus.HEALTHY,
+    };
+
+    this.host_A.networkLayer.destIp = '192.168.2.10';
+
+    this.host_A.stack.sendData(packet);
+  }
 }
