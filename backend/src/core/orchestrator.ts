@@ -137,9 +137,9 @@ export class Orchestrator {
     return this.logger.getLogs();
   }
 
-  public runSimulation() {
+  public runSimulation(paylaod: string) {
     const packet = new BasePacket();
-    packet.setPayload('Hello Host B, this is Host A!');
+    packet.setPayload(paylaod);
 
     packet.metadata = {
       currentLayer: LayerLevel.APPLICATION,
