@@ -12,6 +12,7 @@ import {
   PacketDirection,
   PacketStatus,
   Host,
+  LogEntry,
 } from '../types';
 
 export class Orchestrator {
@@ -97,7 +98,9 @@ export class Orchestrator {
     return { stack, applicationLayer, networkLayer, physicalLayer };
   }
 
-  private connectPhysicalLayers(onComplete: (logs: any[]) => void) {
+  private connectPhysicalLayers(
+    onComplete: (data: { finalPayload: string; logs: LogEntry[] }) => void,
+  ) {
     this.host_A.physicalLayer.onDataTransmit = (packet) => {
       this.logger.log(
         LayerLevel.PHYSICAL,
@@ -111,7 +114,10 @@ export class Orchestrator {
           `Host B received final payload: ${finalPacket.getPayload()}`,
           LogLevel.SUCCESS,
         );
-        onComplete(this.logger.getLogs());
+        onComplete({
+          finalPayload: finalPacket.getPayload(),
+          logs: this.logger.getLogs(),
+        });
       }
     };
 
@@ -132,7 +138,7 @@ export class Orchestrator {
     };
   }
 
-  public async runSimulation(payload: string): Promise<any[]> {
+  public async runSimulation(payload: string): Promise<{ finalPayload: string; logs: LogEntry[] }> {
     this.logger.clearLogs();
 
     return new Promise((resolve) => {

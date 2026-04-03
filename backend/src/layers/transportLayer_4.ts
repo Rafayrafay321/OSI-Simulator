@@ -62,6 +62,7 @@ export class TransportLayer implements ILayer {
 
     const MSS = env.CONFIG_MSS as number;
     const payloadLength = packet.payload.length;
+    const masterCheckSum = calculateChecksum(packet.payload);
 
     if (payloadLength > MSS) {
       const packetId = crypto.randomUUID();
@@ -92,11 +93,9 @@ export class TransportLayer implements ILayer {
           totalSegment: noOfSegments,
         };
 
-        const checkSum = calculateChecksum(currentSegmentPayload);
-
         newSegmentPacket.addHeader(LayerLevel.TRANSPORT, {
           ...headerData,
-          checkSum: checkSum,
+          checkSum: masterCheckSum,
         });
 
         newSegmentPacket.metadata = {
@@ -152,13 +151,6 @@ export class TransportLayer implements ILayer {
 
     const payload = packet.payload as string;
 
-    const expectedChecksum = calculateChecksum(payload);
-    if (header.checkSum !== expectedChecksum) {
-      const errorMsg = `Invalid checksum. Expected ${expectedChecksum}, but got ${header.checkSum}. Packet is corrupted.`;
-      this.logger.log(LayerLevel.TRANSPORT, errorMsg, LogLevel.ERROR);
-      throw new Error('Checksum validation failed. Packet is corrupted.');
-    }
-
     if (header.totalSegment === 1) {
       this.logger.log(
         LayerLevel.TRANSPORT,
@@ -197,6 +189,12 @@ export class TransportLayer implements ILayer {
       });
 
       const finalPayload = buffer.map((p) => p.payload).join('');
+      const expectedChecksum = calculateChecksum(finalPayload);
+      if (header.checkSum !== expectedChecksum) {
+        const errorMsg = `Invalid checksum. Expected ${expectedChecksum}, but got ${header.checkSum}. Packet is corrupted.`;
+        this.logger.log(LayerLevel.TRANSPORT, errorMsg, LogLevel.ERROR);
+        throw new Error('Checksum validation failed. Packet is corrupted.');
+      }
 
       const firstSegment = buffer[0];
       const reassembledPacket = new BasePacket();
