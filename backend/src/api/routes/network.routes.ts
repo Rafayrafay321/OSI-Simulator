@@ -1,4 +1,4 @@
-import { Request, Response, Router } from 'express';
+import { Router } from 'express';
 
 // Custom Imports
 import { send } from '../controllers/network.controller';

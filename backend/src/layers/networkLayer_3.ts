@@ -103,6 +103,7 @@ export class NetworkLayer implements ILayer {
           currentLayer: LayerLevel.NETWORK,
           direction: PacketDirection.SENDER_TO_RECEIVER,
           status: PacketStatus.HEALTHY,
+          destinationIp: this.destIp,
         };
         this.logger.log(
           LayerLevel.NETWORK,
@@ -129,6 +130,7 @@ export class NetworkLayer implements ILayer {
         currentLayer: LayerLevel.NETWORK,
         direction: PacketDirection.SENDER_TO_RECEIVER,
         status: PacketStatus.HEALTHY,
+        destinationIp: this.destIp,
       };
       this.logger.log(
         LayerLevel.NETWORK,
@@ -141,6 +143,7 @@ export class NetworkLayer implements ILayer {
   }
 
   public handleIncoming(packet: BasePacket): BasePacket | null {
+    packet.metadata.currentLayer = LayerLevel.NETWORK;
     this.logger.log(
       LayerLevel.NETWORK,
       'Handling incoming packet.',
@@ -180,7 +183,7 @@ export class NetworkLayer implements ILayer {
       packet.setPayload(finalPaylaod);
     }
 
-    packet.removeHeader(LayerLevel.NETWORK);
+    packet.removeHeader();
     return packet;
   }
 }

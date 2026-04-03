@@ -142,12 +142,14 @@ export class TransportLayer implements ILayer {
   }
 
   public handleIncoming(packet: BasePacket): BasePacket | null {
+    packet.metadata.currentLayer = LayerLevel.TRANSPORT;
     this.logger.log(
       LayerLevel.TRANSPORT,
       'Handling incoming packet.',
       LogLevel.INFO,
     );
     const header = packet.getHeader() as TransportLayerData;
+
     const payload = packet.payload as string;
 
     const expectedChecksum = calculateChecksum(payload);
@@ -163,7 +165,7 @@ export class TransportLayer implements ILayer {
         'Passing single packet up to Application Layer.',
         LogLevel.INFO,
       );
-      packet.removeHeader(LayerLevel.TRANSPORT);
+      packet.removeHeader();
       return packet;
     }
 
@@ -202,7 +204,7 @@ export class TransportLayer implements ILayer {
       reassembledPacket.metadata = { ...firstSegment.metadata };
 
       reassembledPacket.setPayload(finalPayload);
-      reassembledPacket.removeHeader(LayerLevel.TRANSPORT);
+      reassembledPacket.removeHeader();
 
       this.segmentBuffer.delete(packetId);
 

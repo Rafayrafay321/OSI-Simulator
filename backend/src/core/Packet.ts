@@ -109,10 +109,10 @@ export class BasePacket {
     );
   }
 
-  public removeHeader(layerName: LayerLevel): void {
+  public removeHeader(): void {
     const layerToRemove = this.metadata.currentLayer;
     const indexOfHeaderToRemove = this.headers.findIndex(
-      (headerObject) => (headerObject.layerName = layerToRemove),
+      (headerObject) => headerObject.layerName === layerToRemove,
     );
     this.headers.splice(indexOfHeaderToRemove, 1);
 

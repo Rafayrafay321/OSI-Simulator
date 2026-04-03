@@ -48,6 +48,7 @@ export class ApplicationLayer implements ILayer {
   };
 
   handleIncoming = (packet: BasePacket): BasePacket | null => {
+    packet.metadata.currentLayer = LayerLevel.APPLICATION;
     const payload = packet.getPayload();
     if (!payload || typeof payload !== 'string') {
       return null;
@@ -58,10 +59,11 @@ export class ApplicationLayer implements ILayer {
       `Parsing incoming JSON payload...`,
       LogLevel.INFO,
     );
+    const jsonPayload = JSON.stringify(payload);
 
     try {
-      JSON.parse(payload);
-      packet.removeHeader(LayerLevel.APPLICATION);
+      JSON.parse(jsonPayload);
+      packet.removeHeader();
       return packet;
     } catch (error) {
       this.logger.log(

@@ -16,4 +16,5 @@ export const env = {
   IP_HEADER_SIZE: requireEnv('IP_HEADER_SIZE'),
   BOARDCAST_MAC_ADD: requireEnv('BOARDCAST_MAC_ADDRESS'),
   PORT: requireEnv('PORT'),
+  NODE_ENV: requireEnv('NODE_ENV'),
 };

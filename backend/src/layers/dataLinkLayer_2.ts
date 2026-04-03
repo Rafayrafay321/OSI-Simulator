@@ -120,6 +120,7 @@ export class DataLinkLayer implements ILayer {
   }
 
   public handleIncoming(packet: BasePacket): BasePacket | null {
+    packet.metadata.currentLayer = LayerLevel.DATA_LINK;
     const BROADCAST_MAC_ADDRESS = env.BOARDCAST_MAC_ADD;
     this.logger.log(
       LayerLevel.DATA_LINK,
@@ -136,7 +137,6 @@ export class DataLinkLayer implements ILayer {
       );
       throw new Error('Incoming Payload can not be empty');
     }
-
     const DataLinkLayerRawHeaders = packet.getHeader();
     const DataLinkLayerHeaders = DataLinkLayerRawHeaders as DataLinkLayerData;
     const incommingCheckSum = DataLinkLayerHeaders.trailer;
@@ -188,7 +188,7 @@ export class DataLinkLayer implements ILayer {
       return null;
     }
     // Remove DataLink headers
-    packet.removeHeader(LayerLevel.DATA_LINK);
+    packet.removeHeader();
     return packet;
   }
 }

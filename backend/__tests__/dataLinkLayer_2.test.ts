@@ -109,9 +109,7 @@ describe('DataLinkLayer Tests', () => {
         expect.stringContaining('Dropping packet'),
         expect.anything(),
       );
-      expect(mockPacket.removeHeader).toHaveBeenCalledWith(
-        LayerLevel.DATA_LINK,
-      );
+      expect(mockPacket.removeHeader).toHaveBeenCalled();
     });
 
     it('should drop packet when destination MAC does not match layer MAC', () => {
@@ -140,9 +138,7 @@ describe('DataLinkLayer Tests', () => {
         expect.stringContaining('Dropping packet'),
         expect.anything(),
       );
-      expect(mockPacket.removeHeader).toHaveBeenCalledWith(
-        LayerLevel.DATA_LINK,
-      );
+      expect(mockPacket.removeHeader).toHaveBeenCalled();
     });
 
     it('should drop packet if checksum is invalid', () => {

@@ -58,6 +58,7 @@ describe('Application Layer Tests', () => {
         getPayload: jest.fn().mockReturnValue(payloadString),
         setPayload: jest.fn(),
         removeHeader: jest.fn(),
+        metadata: {},
       } as unknown as jest.Mocked<BasePacket>;
 
       const result = applicationLayer.handleIncoming(mockPacket);
@@ -67,9 +68,7 @@ describe('Application Layer Tests', () => {
       expect(mockPacket.setPayload).not.toHaveBeenCalled();
       // The payload should be unchanged.
       expect(result!.getPayload()).toBe(payloadString);
-      expect(mockPacket.removeHeader).toHaveBeenCalledWith(
-        LayerLevel.APPLICATION,
-      );
+      expect(mockPacket.removeHeader).toHaveBeenCalled();
     });
 
     it('should throw an error when parsing an invalid JSON string payload', () => {
@@ -78,6 +77,7 @@ describe('Application Layer Tests', () => {
         getPayload: jest.fn().mockReturnValue(invalidJsonString),
         setPayload: jest.fn(),
         removeHeader: jest.fn(),
+        metadata: {},
       } as unknown as jest.Mocked<BasePacket>;
 
       expect(() => {

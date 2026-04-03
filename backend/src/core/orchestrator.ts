@@ -40,8 +40,6 @@ export class Orchestrator {
       '0E:88:2F:C1:B9:44',
       8001,
     );
-
-    this.connectPhysicalLayers(this.host_A, this.host_B);
   }
 
   private buildHost(
@@ -99,30 +97,31 @@ export class Orchestrator {
     return { stack, applicationLayer, networkLayer, physicalLayer };
   }
 
-  private connectPhysicalLayers(hostA: Host, hostB: Host) {
-    hostA.physicalLayer.onDataTransmit = (packet) => {
+  private connectPhysicalLayers(onComplete: (logs: any[]) => void) {
+    this.host_A.physicalLayer.onDataTransmit = (packet) => {
       this.logger.log(
         LayerLevel.PHYSICAL,
-        `Transmission: ${hostA.networkLayer.srcIp} -> ${hostB.networkLayer.srcIp}`,
+        `Transmission: ${this.host_A.networkLayer.srcIp} -> ${this.host_B.networkLayer.srcIp}`,
         LogLevel.INFO,
       );
-      const finalPacket = hostB.stack.receiveData(packet.clone());
+      const finalPacket = this.host_B.stack.receiveData(packet.clone());
       if (finalPacket) {
         this.logger.log(
           LayerLevel.APPLICATION,
           `Host B received final payload: ${finalPacket.getPayload()}`,
           LogLevel.SUCCESS,
         );
+        onComplete(this.logger.getLogs());
       }
     };
 
-    hostB.physicalLayer.onDataTransmit = (packet) => {
+    this.host_B.physicalLayer.onDataTransmit = (packet) => {
       this.logger.log(
         LayerLevel.PHYSICAL,
-        `Transmission: ${hostB.networkLayer.srcIp} -> ${hostA.networkLayer.srcIp}`,
+        `Transmission: ${this.host_B.networkLayer.srcIp} -> ${this.host_A.networkLayer.srcIp}`,
         LogLevel.INFO,
       );
-      const finalPacket = hostA.stack.receiveData(packet.clone());
+      const finalPacket = this.host_A.stack.receiveData(packet.clone());
       if (finalPacket) {
         this.logger.log(
           LayerLevel.APPLICATION,
@@ -133,22 +132,25 @@ export class Orchestrator {
     };
   }
 
-  public getLogs() {
-    return this.logger.getLogs();
-  }
+  public async runSimulation(payload: string): Promise<any[]> {
+    this.logger.clearLogs();
 
-  public runSimulation(paylaod: string) {
-    const packet = new BasePacket();
-    packet.setPayload(paylaod);
+    return new Promise((resolve) => {
+      this.connectPhysicalLayers(resolve);
 
-    packet.metadata = {
-      currentLayer: LayerLevel.APPLICATION,
-      direction: PacketDirection.SENDER_TO_RECEIVER,
-      status: PacketStatus.HEALTHY,
-    };
+      const packet = new BasePacket();
+      packet.setPayload(payload);
 
-    this.host_A.networkLayer.destIp = '192.168.2.10';
+      packet.metadata = {
+        currentLayer: LayerLevel.APPLICATION,
+        direction: PacketDirection.SENDER_TO_RECEIVER,
+        status: PacketStatus.HEALTHY,
+      };
+      this.host_A.networkLayer.destIp = '192.168.2.10';
 
-    this.host_A.stack.sendData(packet);
+      console.log(`[Orchestrator] Starting simulation...`);
+
+      this.host_A.stack.sendData(packet);
+    });
   }
 }

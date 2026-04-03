@@ -46,23 +46,16 @@ export class PhysicalLayer implements ILayer {
     return null;
   }
 
-  public handleIncoming(
-    packet: BasePacket,
-    incomingPayload?: string,
-  ): BasePacket | null {
+  public handleIncoming(packet: BasePacket): BasePacket | null {
     this.logger.log(
       LayerLevel.PHYSICAL,
       'Handling incoming packet.',
       LogLevel.INFO,
     );
-
+    const incomingPayload = packet.getPayload();
     if (incomingPayload) {
       packet.setPayload(incomingPayload);
-      this.logger.log(
-        LayerLevel.PHYSICAL,
-        'Received raw data.',
-        LogLevel.INFO,
-      );
+      this.logger.log(LayerLevel.PHYSICAL, 'Received raw data.', LogLevel.INFO);
     }
     // In a real simulation, we would deserialize the payload here.
     // Since we are passing the BasePacket object directly, we just pass it on.

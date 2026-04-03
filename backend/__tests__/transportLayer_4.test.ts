@@ -19,7 +19,7 @@ jest.mock('../src/config/env');
 jest.mock('../src/core/Packet', () => ({
   BasePacket: jest.fn().mockImplementation(() => ({
     payload: null,
-    metadata: null,
+    metadata: {},
     headers: [],
     addHeader: jest.fn(),
     getHeader: jest.fn(),
@@ -41,9 +41,7 @@ jest.mock('../src/core/Packet', () => ({
 // Test-side checksum calculation to verify against the implementation
 const calculateTestChecksum = (payload: string): number => {
   if (!payload) return 0;
-  return payload
-    .split('')
-    .reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  return payload.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
 };
 
 describe('Transport Layer', () => {
@@ -69,7 +67,7 @@ describe('Transport Layer', () => {
     let mockPacket: jest.Mocked<BasePacket>;
 
     beforeEach(() => {
-        mockPacket = new BasePacket() as jest.Mocked<BasePacket>;
+      mockPacket = new BasePacket() as jest.Mocked<BasePacket>;
     });
 
     it('should throw an error if the packet has no payload', () => {
@@ -107,11 +105,12 @@ describe('Transport Layer', () => {
     });
 
     it('should segment a large payload and pass multiple packets to the network layer when payload exceeds MSS', () => {
-      mockPacket.payload = 'This is a very long payload that definitely exceeds the Maximum Segment Size';
+      mockPacket.payload =
+        'This is a very long payload that definitely exceeds the Maximum Segment Size';
       jest.mocked(env).env.CONFIG_MSS = 10;
-      
+
       transportLayer.handleOutgoing(mockPacket);
-      
+
       const payloadLength = mockPacket.payload.length;
       const segmentCount = Math.ceil(payloadLength / 10);
 
@@ -145,7 +144,7 @@ describe('Transport Layer', () => {
         id,
         payload,
         headers: [header],
-        metadata: null,
+        metadata: {},
         addHeader: jest.fn(),
         getHeader: jest.fn().mockReturnValue(header),
         removeHeader: jest.fn(),
@@ -177,7 +176,7 @@ describe('Transport Layer', () => {
       const result = transportLayer.handleIncoming(packet);
 
       expect(result).toBe(packet);
-      expect(packet.removeHeader).toHaveBeenCalledWith(LayerLevel.TRANSPORT);
+      expect(packet.removeHeader).toHaveBeenCalled();
       expect(mockLogger.log).toHaveBeenCalledWith(
         LayerLevel.TRANSPORT,
         'Passing single packet up to Application Layer.',

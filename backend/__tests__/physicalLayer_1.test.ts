@@ -75,13 +75,14 @@ describe('PhysicalLayer', () => {
       mockPacket = {
         payload: null,
         setPayload: jest.fn(),
+        getPayload: jest.fn().mockReturnValue('0101010101'),
         metadata: {},
       } as unknown as jest.Mocked<BasePacket>;
     });
 
     it('should correctly handle a valid incoming payload', () => {
-      const incomingPayload = '0101010101';
-      physicalLayer.handleIncoming(mockPacket, incomingPayload);
+      const incomingPayload = mockPacket.getPayload();
+      physicalLayer.handleIncoming(mockPacket);
       expect(mockPacket.setPayload).toHaveBeenCalledWith(incomingPayload);
       expect(mockPacket.metadata.currentLayer).toBe(LayerLevel.PHYSICAL);
       expect(mockLogger.log).toHaveBeenCalledWith(

@@ -24,7 +24,7 @@ jest.mock('node:crypto');
 jest.mock('../src/core/Packet', () => ({
   BasePacket: jest.fn().mockImplementation(() => ({
     payload: null,
-    metadata: null,
+    metadata: {},
     headers: [],
     addHeader: jest.fn(),
     getHeader: jest.fn(),
@@ -113,6 +113,7 @@ describe('Network Layer Tests', () => {
         currentLayer: LayerLevel.NETWORK,
         direction: PacketDirection.SENDER_TO_RECEIVER,
         status: PacketStatus.HEALTHY,
+        destinationIp: '192.0.2.45',
       });
     });
   });

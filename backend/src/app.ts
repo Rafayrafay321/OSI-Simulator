@@ -1,6 +1,7 @@
 // Node imports
 import express from 'express';
 import cors from 'cors';
+import { globalErrorHandler } from './api/middleware/errorMiddleware';
 
 // Custom imports
 import sendRoute from './api/routes/network.routes';
@@ -16,8 +17,10 @@ app.use(express.json());
 app.use('/api', sendRoute);
 
 // Health check route
-app.get('/health', (req, res) => {
+app.get('/api/health', (req, res) => {
   res.send('API is running...');
 });
+
+app.use(globalErrorHandler);
 
 export default app;
