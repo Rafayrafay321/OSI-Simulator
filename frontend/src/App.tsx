@@ -1,4 +1,4 @@
-import { SimulationForm } from './components/simulationForm';
+import { SimulationForm } from './components/simulationPage';
 import './App.css';
 
 function App() {

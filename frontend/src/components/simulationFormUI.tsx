@@ -1,37 +1,20 @@
-import React, { useState } from 'react';
+// Type
+import type React from 'react';
+import type { simulationConfig } from '../../../backend/src/types';
 
-// Types
-import type { simulationConfig } from '../../../backend/src/types/index.ts';
+interface FormProp {
+  formData: Partial<simulationConfig>;
+  handleChange: (
+    e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>,
+  ) => void;
+  handleSubmit: (e: React.SubmitEvent<HTMLFormElement>) => void;
+  loading: boolean;
+}
 
-export const SimulationForm = () => {
-  const [formData, setFormData] = useState<simulationConfig>({
-    payload: '',
-    srcIp: '',
-    destIp: '',
-    srcPort: 0,
-    destPort: 0,
-    appProtocol: 'HTTP',
-    appMethod: 'POST',
-  });
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    console.log('Form Data for Orchestrator: ', formData);
-  };
-
+export const SimulationFormUI = (props: FormProp) => {
   return (
     <form
-      onSubmit={handleSubmit}
+      onSubmit={props.handleSubmit}
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -44,8 +27,8 @@ export const SimulationForm = () => {
         <input
           type="text"
           name="payload"
-          value={formData.payload}
-          onChange={handleChange}
+          value={props.formData.payload}
+          onChange={props.handleChange}
           required
         />
       </label>
@@ -56,8 +39,8 @@ export const SimulationForm = () => {
           <input
             type="text"
             name="srcIp"
-            value={formData.srcIp}
-            onChange={handleChange}
+            value={props.formData.srcIp}
+            onChange={props.handleChange}
           />
         </label>
         <label>
@@ -65,8 +48,8 @@ export const SimulationForm = () => {
           <input
             type="text"
             name="destIp"
-            value={formData.destIp}
-            onChange={handleChange}
+            value={props.formData.destIp}
+            onChange={props.handleChange}
           />
         </label>
       </div>
@@ -77,8 +60,8 @@ export const SimulationForm = () => {
           <input
             type="text"
             name="srcPort"
-            value={formData.srcPort}
-            onChange={handleChange}
+            value={props.formData.srcPort}
+            onChange={props.handleChange}
           />
         </label>
         <label>
@@ -86,8 +69,8 @@ export const SimulationForm = () => {
           <input
             type="text"
             name="destPort"
-            value={formData.destPort}
-            onChange={handleChange}
+            value={props.formData.destPort}
+            onChange={props.handleChange}
           />
         </label>
       </div>
@@ -96,8 +79,8 @@ export const SimulationForm = () => {
         Protocol:
         <select
           name="appProtocol"
-          value={formData.appProtocol}
-          onChange={handleChange}
+          value={props.formData.appProtocol}
+          onChange={props.handleChange}
         >
           <option value="HTTP">HTTP</option>
           <option value="HTTPS">HTTPS</option>
