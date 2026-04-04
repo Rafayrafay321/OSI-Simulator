@@ -1,8 +1,8 @@
-import { SimulationForm } from './components/simulationPage';
+import { SimulationContainer } from './components/simulationPage';
 import './App.css';
 
 function App() {
-  return <SimulationForm />;
+  return <SimulationContainer />;
 }
 
 export default App;
