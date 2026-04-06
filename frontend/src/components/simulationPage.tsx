@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 
 // Custom Imports
 import { SimulationFormUI } from './simulationFormUI.tsx';
+import NetworkMapUI from './NetworkMapUI.tsx';
 import { LogItem } from './logItemUI.tsx';
 
 // Types
@@ -47,7 +48,6 @@ export const SimulationContainer = () => {
       });
       const data = await response.json();
 
-      // In your backend response, it's called 'response' based on your previous logs
       setSimulationLogs(data.response || []);
       setLoading(false);
     } catch (error) {
@@ -66,6 +66,8 @@ export const SimulationContainer = () => {
           Visualize data flow through the networking stack in real-time
         </p>
       </header>
+
+      <NetworkMapUI logs={simulationLogs} />
 
       <main className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
         <section className="flex justify-center">

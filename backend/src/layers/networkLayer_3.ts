@@ -79,6 +79,11 @@ export class NetworkLayer implements ILayer {
       'Handling outgoing packet.',
       LogLevel.INFO,
     );
+
+    // Use IPs from metadata if they exist (e.g., when forwarding), otherwise use configured IPs
+    const packetSrcIp = packet.metadata.sourceIp || this.srcIp;
+    const packetDestIp = packet.metadata.destinationIp || this.destIp;
+
     const MTU = Number(env.CONFIG_MTU);
     const ipHeaderSize = Number(env.IP_HEADER_SIZE);
     const payloadSize = packet.getPayloadSize();
@@ -112,8 +117,8 @@ export class NetworkLayer implements ILayer {
 
         newFragmentPacket.addHeader(LayerLevel.NETWORK, {
           id: newFragmentId,
-          srcIp: this.srcIp,
-          destIp: this.destIp,
+          srcIp: packetSrcIp,
+          destIp: packetDestIp,
           ttl: this.ttl,
           protocol: this.protocol,
           DFflag: this.DFflag,
@@ -125,7 +130,8 @@ export class NetworkLayer implements ILayer {
           currentLayer: LayerLevel.NETWORK,
           direction: PacketDirection.SENDER_TO_RECEIVER,
           status: PacketStatus.HEALTHY,
-          destinationIp: this.destIp,
+          sourceIp: packetSrcIp,
+          destinationIp: packetDestIp,
         };
         this.logger.log(
           LayerLevel.NETWORK,
@@ -139,8 +145,8 @@ export class NetworkLayer implements ILayer {
     } else {
       packet.addHeader(LayerLevel.NETWORK, {
         id: this.id,
-        srcIp: this.srcIp,
-        destIp: this.destIp,
+        srcIp: packetSrcIp,
+        destIp: packetDestIp,
         ttl: this.ttl,
         protocol: this.protocol,
         DFflag: this.DFflag,
@@ -152,7 +158,8 @@ export class NetworkLayer implements ILayer {
         currentLayer: LayerLevel.NETWORK,
         direction: PacketDirection.SENDER_TO_RECEIVER,
         status: PacketStatus.HEALTHY,
-        destinationIp: this.destIp,
+        sourceIp: packetSrcIp,
+        destinationIp: packetDestIp,
       };
       this.logger.log(
         LayerLevel.NETWORK,
@@ -175,6 +182,10 @@ export class NetworkLayer implements ILayer {
     const headers = packet.getHeader() as NetworkLayerData;
     const fragmentId = headers.id;
     const moreFragmentFlag = headers.MFflag;
+
+    // Preserve IP information in metadata before potentially removing the header
+    packet.metadata.sourceIp = headers.srcIp;
+    packet.metadata.destinationIp = headers.destIp;
 
     if (moreFragmentFlag === 1) {
       if (!this.fragmentBuffer.has(fragmentId)) {

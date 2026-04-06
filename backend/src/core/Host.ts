@@ -51,6 +51,7 @@ export class Host extends NetworkNode {
   }
   public initiateTransmission(destConfig: simulationConfig) {
     const packet = new BasePacket();
+    this.networkLayer.prepareForTransmission(destConfig.destIp);
 
     packet.setPayload(destConfig.payload);
 

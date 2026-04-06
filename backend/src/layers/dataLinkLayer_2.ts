@@ -83,6 +83,7 @@ export class DataLinkLayer implements ILayer {
     );
 
     const nextHopIp = this.defaultGateway || packet.metadata.destinationIp;
+    console.log(nextHopIp);
     const destMac = this.arpCache.get(nextHopIp);
 
     if (!destMac) {

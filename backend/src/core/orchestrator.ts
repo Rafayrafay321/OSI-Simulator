@@ -68,7 +68,7 @@ export class Orchestrator {
     this.hostA.physicalLayer.onDataTransmit = (packet) => {
       this.logger.log(
         LayerLevel.PHYSICAL,
-        `Transmission: Host A -> Router`,
+        `Transmission: HostA -> RouterA`,
         LogLevel.INFO,
       );
       this.router.forwardPacket(packet.clone());
@@ -77,7 +77,7 @@ export class Orchestrator {
     this.router.physicalLayer.onDataTransmit = (packet) => {
       this.logger.log(
         LayerLevel.PHYSICAL,
-        `Transmission: Router -> Host B`,
+        `Transmission: RouterA -> HostB`,
         LogLevel.INFO,
       );
       const finalPacket = this.hostB.onReceipt(packet.clone());
