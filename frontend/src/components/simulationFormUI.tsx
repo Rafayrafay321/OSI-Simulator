@@ -123,6 +123,31 @@ export const SimulationFormUI = (props: FormProp) => {
         </div>
       </div>
 
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <label className="block text-sm font-medium text-slate-300 text-left">
+              Packet Drop Chance
+            </label>
+            {/* Display the percentage value here */}
+            <span className="text-sm font-bold text-network-blue">
+              {Math.round(props.formData.dropChance! * 100)}%
+            </span>
+          </div>
+
+          <input
+            type="range"
+            name="dropChance"
+            min="0"
+            max="1"
+            step="0.01" // Allow 1% increments
+            value={props.formData.dropChance}
+            onChange={props.handleChange}
+            className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-network-blue"
+          />
+        </div>
+      </div>
+
       <button
         type="submit"
         disabled={props.loading}

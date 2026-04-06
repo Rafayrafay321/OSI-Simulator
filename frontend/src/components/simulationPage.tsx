@@ -20,6 +20,7 @@ export const SimulationContainer = () => {
     destPort: 8001,
     appProtocol: 'HTTPS',
     appMethod: 'POST',
+    dropChance: 0,
   });
   const [simulationLogs, setSimulationLogs] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState(false);
