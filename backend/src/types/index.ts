@@ -1,8 +1,10 @@
 import { NetworkStack } from '../core/NetworkStack';
 import { BasePacket } from '../core/Packet';
 import { ApplicationLayer } from '../layers/applicationLayer_7';
+import { DataLinkLayer } from '../layers/dataLinkLayer_2';
 import { NetworkLayer } from '../layers/networkLayer_3';
 import { PhysicalLayer } from '../layers/physicalLayer_1';
+import { TransportLayer } from '../layers/transportLayer_4';
 
 //Enum for PacketDirection in Metadata
 export enum PacketDirection {
@@ -118,8 +120,41 @@ export interface Host {
   networkLayer: NetworkLayer;
   physicalLayer: PhysicalLayer;
 }
+
+export interface Router {
+  transportLayer: TransportLayer;
+  dataLinkLayer: DataLinkLayer;
+  physicalLayer: PhysicalLayer;
+}
 export type LayerData =
   | ApplicationLayerData
   | TransportLayerData
   | NetworkLayerData
   | DataLinkLayerData;
+
+export interface simulationConfig {
+  payload: string;
+  srcIp: string;
+  destIp: string;
+  srcPort: number;
+  destPort: number;
+  appProtocol: string;
+  appMethod: string;
+  dropChance: number;
+}
+
+export interface NodeConfig {
+  ipAddress: string;
+  macAddress: string;
+  defaultGateway?: string;
+  dropChance?: number;
+}
+
+export interface HostConfig extends NodeConfig {
+  srcPort: number;
+  srcProtocol: string;
+  srcMethod: string;
+  defaultGateway: string;
+}
+
+export interface RouterConfig extends NodeConfig {}

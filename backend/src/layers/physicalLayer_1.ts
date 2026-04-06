@@ -6,11 +6,14 @@ export class PhysicalLayer implements ILayer {
   public name = 'Physical Layer';
   public level = LayerLevel.PHYSICAL;
   private logger: Logger;
+  private dropChance?: number | undefined;
 
   public onDataTransmit?: (packet: BasePacket) => void;
+  public onDataDroped?: () => void;
 
-  constructor(logger: Logger) {
+  constructor(logger: Logger, dropChance?: number | undefined) {
     this.logger = logger;
+    this.dropChance = dropChance;
   }
 
   private serializePacket(packet: BasePacket): string {
@@ -38,6 +41,23 @@ export class PhysicalLayer implements ILayer {
       LogLevel.INFO,
     );
     packet.metadata.currentLayer = LayerLevel.PHYSICAL;
+
+    const probabilityOfPacketDrop = Math.random();
+
+    if (this.dropChance) {
+      if (this.dropChance > probabilityOfPacketDrop) {
+        this.logger.log(
+          LayerLevel.PHYSICAL,
+          'Simulation halted: Packet was lost in transmission.',
+          LogLevel.ERROR,
+        );
+
+        if (this.onDataDroped) {
+          this.onDataDroped();
+        }
+        return null;
+      }
+    }
 
     if (this.onDataTransmit) {
       this.onDataTransmit(packet);

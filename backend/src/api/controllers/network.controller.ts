@@ -4,20 +4,24 @@ import { Request, Response, NextFunction } from 'express';
 import { Orchestrator } from '../../core/orchestrator';
 import { AppError } from '../utils/AppError';
 
-export const send = async (req: Request, res: Response, next: NextFunction) => {
-  const { payload } = req.body;
+// Types
+import type { simulationConfig } from '../../types';
 
-  if (!payload) {
-    return next(new AppError(400, 'Payload can not be empty.'));
+export const send = async (req: Request, res: Response, next: NextFunction) => {
+  const config = req.body as simulationConfig;
+
+  if (!config) {
+    return next(new AppError(400, 'Bad Request.'));
   }
-  const simulation = new Orchestrator();
+  const simulation = new Orchestrator(config);
   try {
-    const logs = await simulation.runSimulation(payload);
+    const logs = await simulation.runSimulation(config);
 
     res.status(200).json({
       status: 'Success',
       message: 'Simulation ran successfully.',
-      response: logs,
+      paylaod: logs.finalPayload,
+      response: logs.logs,
     });
     return;
   } catch (error) {

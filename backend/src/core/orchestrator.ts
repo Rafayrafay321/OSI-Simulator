@@ -1,162 +1,117 @@
-import { NetworkStack } from './NetworkStack';
-import { ApplicationLayer } from '../layers/applicationLayer_7';
-import { TransportLayer } from '../layers/transportLayer_4';
-import { NetworkLayer } from '../layers/networkLayer_3';
-import { DataLinkLayer } from '../layers/dataLinkLayer_2';
-import { PhysicalLayer } from '../layers/physicalLayer_1';
-import { BasePacket } from './Packet';
+import { Host } from './Host';
+import { Router } from './Router';
 import { Logger } from './Logger';
 import {
   LayerLevel,
   LogLevel,
-  PacketDirection,
-  PacketStatus,
-  Host,
+  HostConfig,
   LogEntry,
+  simulationConfig,
 } from '../types';
 
 export class Orchestrator {
-  public host_A: Host;
-  public host_B: Host;
-  // public router: NetworkLayer;
-  private arpCache: Map<string, string> = new Map();
-  private logger: Logger;
+  public hostA: Host;
+  public hostB: Host;
+  public router: Router;
+  public logger: Logger;
+  private arpCache: Map<string, string>;
 
-  constructor() {
-    this.arpCache.set('192.168.1.10', '02:A1:C3:54:7B:9D'); // Host A
-    this.arpCache.set('192.168.2.10', '0E:88:2F:C1:B9:44'); // Host B
-
+  constructor(config: simulationConfig) {
     this.logger = new Logger();
+    this.arpCache = new Map<string, string>();
 
-    this.host_A = this.buildHost(
-      'HostA',
-      '192.168.1.10',
-      '02:A1:C3:54:7B:9D',
-      8000,
-    );
+    const routerIp = '192.168.1.1';
+    const routerMac = '00:00:5E:00:53:AA';
 
-    this.host_B = this.buildHost(
-      'HostB',
-      '192.168.2.10',
-      '0E:88:2F:C1:B9:44',
-      8001,
-    );
-  }
+    const hostAConfig: HostConfig = {
+      ipAddress: config.srcIp,
+      macAddress: 'AA:AA:AA:AA:AA:AA',
+      defaultGateway: routerIp,
+      srcPort: config.srcPort,
+      srcProtocol: config.appProtocol,
+      srcMethod: config.appMethod,
+      dropChance: config.dropChance,
+    };
+    this.hostA = new Host('HostA', hostAConfig, this.logger, this.arpCache);
 
-  private buildHost(
-    name: string,
-    ipAddress: string,
-    macAddress: string,
-    port: number,
-  ): Host {
-    const stack = new NetworkStack(this.logger);
+    const hostBConfig: HostConfig = {
+      ipAddress: config.destIp,
+      macAddress: 'BB:BB:BB:BB:BB:BB',
+      defaultGateway: routerIp,
+      srcPort: config.destPort,
+      srcProtocol: config.appProtocol,
+      srcMethod: config.appMethod,
+    };
+    this.hostB = new Host('HostB', hostBConfig, this.logger, this.arpCache);
 
-    const applicationLayer = new ApplicationLayer(
-      { protocol: 'HTTPS', method: 'POST' },
+    const routerConfig = {
+      ipAddress: routerIp,
+      macAddress: routerMac,
+    };
+    this.router = new Router(
+      'RouterA',
+      routerConfig,
       this.logger,
-    );
-
-    const transportLayer = new TransportLayer(
-      {
-        underlyingProtocol: 'TCP',
-        srcPort: port,
-        destPort: 0, // Will be set dynamically during send
-        segmentIndex: 0,
-        totalSegment: 1,
-      },
-      this.logger,
-    );
-
-    const networkLayer = new NetworkLayer(
-      {
-        id: `net-${name}`,
-        srcIp: ipAddress,
-        destIp: '0.0.0.0', // Will be set dynamically
-        ttl: 64,
-        protocol: 6,
-        DFflag: 0,
-        MFflag: 0,
-        fragmentOffSet: 0,
-      },
-      this.logger,
-    );
-
-    const dataLinkLayer = new DataLinkLayer(
-      { srcMac: macAddress, etherType: 123 },
       this.arpCache,
-      this.logger,
     );
 
-    const physicalLayer = new PhysicalLayer(this.logger);
-
-    stack.registerLayer(applicationLayer);
-    stack.registerLayer(transportLayer);
-    stack.registerLayer(networkLayer);
-    stack.registerLayer(dataLinkLayer);
-    stack.registerLayer(physicalLayer);
-
-    return { stack, applicationLayer, networkLayer, physicalLayer };
+    this.arpCache.set(routerIp, routerMac);
+    this.arpCache.set(config.destIp, hostBConfig.macAddress);
   }
 
   private connectPhysicalLayers(
-    onComplete: (data: { finalPayload: string; logs: LogEntry[] }) => void,
+    onComplete: (data: {
+      finalPayload: string | null;
+      logs: LogEntry[];
+    }) => void,
   ) {
-    this.host_A.physicalLayer.onDataTransmit = (packet) => {
+    this.hostA.physicalLayer.onDataTransmit = (packet) => {
       this.logger.log(
         LayerLevel.PHYSICAL,
-        `Transmission: ${this.host_A.networkLayer.srcIp} -> ${this.host_B.networkLayer.srcIp}`,
+        `Transmission: Host A -> Router`,
         LogLevel.INFO,
       );
-      const finalPacket = this.host_B.stack.receiveData(packet.clone());
-      if (finalPacket) {
-        this.logger.log(
-          LayerLevel.APPLICATION,
-          `Host B received final payload: ${finalPacket.getPayload()}`,
-          LogLevel.SUCCESS,
-        );
-        onComplete({
-          finalPayload: finalPacket.getPayload(),
-          logs: this.logger.getLogs(),
-        });
-      }
+      this.router.forwardPacket(packet.clone());
     };
 
-    this.host_B.physicalLayer.onDataTransmit = (packet) => {
+    this.router.physicalLayer.onDataTransmit = (packet) => {
       this.logger.log(
         LayerLevel.PHYSICAL,
-        `Transmission: ${this.host_B.networkLayer.srcIp} -> ${this.host_A.networkLayer.srcIp}`,
+        `Transmission: Router -> Host B`,
         LogLevel.INFO,
       );
-      const finalPacket = this.host_A.stack.receiveData(packet.clone());
-      if (finalPacket) {
-        this.logger.log(
-          LayerLevel.APPLICATION,
-          `Host A received final payload: ${finalPacket.getPayload()}`,
-          LogLevel.SUCCESS,
-        );
-      }
+      const finalPacket = this.hostB.onReceipt(packet.clone());
+
+      onComplete({
+        finalPayload: finalPacket!.getPayload(),
+        logs: this.logger.getLogs(),
+      });
+    };
+
+    this.hostA.physicalLayer.onDataDroped = () => {
+      onComplete({
+        finalPayload: null,
+        logs: this.logger.getLogs(),
+      });
+    };
+    this.router.physicalLayer.onDataDroped = () => {
+      onComplete({
+        finalPayload: null,
+        logs: this.logger.getLogs(),
+      });
     };
   }
 
-  public async runSimulation(payload: string): Promise<{ finalPayload: string; logs: LogEntry[] }> {
+  public async runSimulation(
+    config: simulationConfig,
+  ): Promise<{ finalPayload: string | null; logs: LogEntry[] }> {
     this.logger.clearLogs();
 
     return new Promise((resolve) => {
       this.connectPhysicalLayers(resolve);
 
-      const packet = new BasePacket();
-      packet.setPayload(payload);
-
-      packet.metadata = {
-        currentLayer: LayerLevel.APPLICATION,
-        direction: PacketDirection.SENDER_TO_RECEIVER,
-        status: PacketStatus.HEALTHY,
-      };
-      this.host_A.networkLayer.destIp = '192.168.2.10';
-
-      console.log(`[Orchestrator] Starting simulation...`);
-
-      this.host_A.stack.sendData(packet);
+      console.log(`[Orchestrator] Starting simulation with Default Gateway...`);
+      this.hostA.initiateTransmission(config);
     });
   }
 }

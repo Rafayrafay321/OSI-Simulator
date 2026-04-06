@@ -46,6 +46,25 @@ export class NetworkLayer implements ILayer {
     this.routingTable = routingTable;
     this.logger = logger;
   }
+  public prepareForTransmission(destinationIp: string): void {
+    if (!destinationIp || !destinationIp.includes('.')) {
+      this.logger.log(
+        LayerLevel.NETWORK,
+        `Invalid Destination IP: ${destinationIp}`,
+        LogLevel.ERROR,
+      );
+      throw new Error('Invalid Destination IP provided to Network Layer.');
+    }
+
+    this.destIp = destinationIp;
+
+    this.logger.log(
+      LayerLevel.NETWORK,
+      `Layer prepared. Target Destination: ${this.destIp}`,
+      LogLevel.INFO,
+    );
+  }
+
   public handleOutgoing(packet: BasePacket): BasePacket | BasePacket[] | null {
     if (!packet.payload) {
       this.logger.log(
@@ -78,7 +97,10 @@ export class NetworkLayer implements ILayer {
 
       for (let i = 0; i < noOfFragments; i++) {
         const lowerIndex = MaxFragmentData * i;
-        const upperIndex = Math.min(lowerIndex + MTU, packet.payload.length);
+        const upperIndex = Math.min(
+          lowerIndex + MaxFragmentData,
+          packet.payload.length,
+        );
         const currentFragmentData = packet.payload.substring(
           lowerIndex,
           upperIndex,

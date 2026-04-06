@@ -19,16 +19,19 @@ export class DataLinkLayer implements ILayer {
   public etherType: number;
   private arpCache: Map<string, string>;
   private logger: Logger;
+  private defaultGateway?: string;
 
   constructor(
     options: DataLinkLayerOptions,
     arpCache: Map<string, string>,
     logger: Logger,
+    defaultGateway?: string,
   ) {
     this.srcMac = options.srcMac;
     this.etherType = options.etherType;
     this.arpCache = arpCache;
     this.logger = logger;
+    this.defaultGateway = defaultGateway;
   }
 
   private calCheckSum(
@@ -78,21 +81,22 @@ export class DataLinkLayer implements ILayer {
       'Handling outgoing packet.',
       LogLevel.INFO,
     );
-    const destIp = packet.metadata.destinationIp;
-    const destMac = this.arpCache.get(destIp);
+
+    const nextHopIp = this.defaultGateway || packet.metadata.destinationIp;
+    const destMac = this.arpCache.get(nextHopIp);
 
     if (!destMac) {
       this.logger.log(
         LayerLevel.DATA_LINK,
-        `MAC address for IP ${destIp} not found in ARP cache.`,
+        `MAC address for IP ${nextHopIp} not found in ARP cache.`,
         LogLevel.ERROR,
       );
-      throw new Error(`Ip: ${destIp} has no Mac Address`);
+      throw new Error(`Ip: ${nextHopIp} has no Mac Address`);
     }
 
     this.logger.log(
       LayerLevel.DATA_LINK,
-      `Found MAC address ${destMac} for IP ${destIp}.`,
+      `Found MAC address ${destMac} for IP ${nextHopIp}.`,
       LogLevel.INFO,
     );
 
