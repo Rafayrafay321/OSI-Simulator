@@ -1,7 +1,21 @@
-const ConnectionWireUI = () => {
+interface ConnectionWireProp {
+  isActive: boolean;
+}
+
+const ConnectionWireUI = ({ isActive }: ConnectionWireProp) => {
   return (
-    <div className="flex-1 h-[2px] bg-gradient-to-r from-blue-500/50 via-slate-700 to-emerald-500/50 mx-4 relative">
-      <div className="absolute inset-0 bg-blue-400/20 blur-sm"></div>
+    <div className="flex-1 relative mx-4 flex items-center">
+      {/* Base wire */}
+      <div className="absolute w-full h-[2px] bg-slate-700"></div>
+      
+      {/* Glowing active wire */}
+      <div
+        className={`absolute w-full h-[3px] transition-all duration-300 ${
+          isActive
+            ? 'bg-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.8)] animate-pulse opacity-100'
+            : 'bg-transparent opacity-0'
+        }`}
+      ></div>
     </div>
   );
 };

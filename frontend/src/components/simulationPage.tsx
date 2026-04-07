@@ -1,5 +1,5 @@
 // React Imports
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 // Custom Imports
 import { SimulationFormUI } from './simulationFormUI.tsx';
@@ -25,6 +25,26 @@ export const SimulationContainer = () => {
   });
   const [simulationLogs, setSimulationLogs] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [formError, setFormError] = useState<Record<string, string>>();
+
+  useEffect(() => {
+    if (simulationLogs.length === 0) return;
+
+    setCurrentIndex(0);
+
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => {
+        if (prev >= simulationLogs.length - 1) {
+          clearInterval(interval);
+          return prev;
+        }
+        return prev + 1;
+      });
+    }, 600);
+
+    return () => clearInterval(interval);
+  }, [simulationLogs]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -32,7 +52,7 @@ export const SimulationContainer = () => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name.includes('Port') ? Number(value) : value,
+      [name]: value,
     }));
   };
 
@@ -48,13 +68,15 @@ export const SimulationContainer = () => {
       });
       const data = await response.json();
 
-      setSimulationLogs(data.response || []);
+      setSimulationLogs(data.response || data.logs || []);
       setLoading(false);
     } catch (error) {
       setLoading(false);
       console.log('Simulation Failed', error);
     }
   };
+
+  const visibleLogs = simulationLogs.slice(0, currentIndex + 1);
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-6 md:p-12 w-full">
@@ -67,7 +89,7 @@ export const SimulationContainer = () => {
         </p>
       </header>
 
-      <NetworkMapUI logs={simulationLogs} />
+      <NetworkMapUI logs={simulationLogs} currentIndex={currentIndex} />
 
       <main className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
         <section className="flex justify-center">
@@ -86,13 +108,13 @@ export const SimulationContainer = () => {
               Live Simulation Logs
             </h2>
             <span className="text-xs text-slate-500 font-mono">
-              {simulationLogs.length} entries
+              {visibleLogs.length} / {simulationLogs.length || 0} entries
             </span>
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 space-y-1 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
-            {simulationLogs.length > 0 ? (
-              simulationLogs.map((log: LogEntry, index: number) => (
+            {visibleLogs.length > 0 ? (
+              visibleLogs.map((log: LogEntry, index: number) => (
                 <LogItem key={index} log={log} />
               ))
             ) : (
