@@ -1,19 +1,29 @@
 import type React from 'react';
-import type { simulationConfig } from '../../../backend/src/types';
 
-interface FormProp {
-  formData: Partial<simulationConfig>;
+import type { FormSchemaType } from '../schemas/simulationSchema';
+
+interface SimulationFormProp {
+  values: FormSchemaType;
+  errors: Record<string, string>;
+  isSubmitting: boolean;
   handleChange: (
-    e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>,
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >,
   ) => void;
   handleSubmit: (e: React.SubmitEvent<HTMLFormElement>) => void;
-  loading: boolean;
 }
 
-export const SimulationFormUI = (props: FormProp) => {
+export const SimulationFormUI: React.FC<SimulationFormProp> = ({
+  values,
+  errors,
+  isSubmitting,
+  handleChange,
+  handleSubmit,
+}) => {
   return (
     <form
-      onSubmit={props.handleSubmit}
+      onSubmit={handleSubmit}
       className="space-y-6 bg-slate-800 p-8 rounded-xl shadow-2xl border border-slate-700 w-full max-w-lg"
     >
       <div className="space-y-2">
@@ -22,13 +32,20 @@ export const SimulationFormUI = (props: FormProp) => {
         </label>
         <textarea
           name="payload"
-          value={props.formData.payload}
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          onChange={props.handleChange as any}
-          required
+          value={values.payload}
+          onChange={handleChange}
           placeholder="Enter the message you want to simulate..."
-          className="w-full h-24 p-3 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-network-blue transition-all"
+          className={`w-full h-24 p-3 bg-slate-900 border ${
+            errors.payload
+              ? 'border-red-500 focus:ring-red-500'
+              : 'border-slate-600 focus:ring-network-blue'
+          } rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 transition-all`}
         />
+        {errors.payload && (
+          <p className="text-red-500 text-xs text-left mt-1">
+            {errors.payload}
+          </p>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -39,11 +56,20 @@ export const SimulationFormUI = (props: FormProp) => {
           <input
             type="text"
             name="srcIp"
-            value={props.formData.srcIp}
-            onChange={props.handleChange}
+            value={values.srcIp}
+            onChange={handleChange}
             placeholder="192.168.1.10"
-            className="w-full p-2.5 bg-slate-900 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-network-blue transition-all"
+            className={`w-full p-2.5 bg-slate-900 border ${
+              errors.srcIp
+                ? 'border-red-500 focus:ring-red-500'
+                : 'border-slate-600 focus:ring-network-blue'
+            } rounded-lg text-white focus:outline-none focus:ring-2 transition-all`}
           />
+          {errors.srcIp && (
+            <p className="text-red-500 text-xs text-left mt-1">
+              {errors.srcIp}
+            </p>
+          )}
         </div>
         <div className="space-y-2">
           <label className="block text-sm font-medium text-slate-300 text-left">
@@ -52,11 +78,20 @@ export const SimulationFormUI = (props: FormProp) => {
           <input
             type="text"
             name="destIp"
-            value={props.formData.destIp}
-            onChange={props.handleChange}
+            value={values.destIp}
+            onChange={handleChange}
             placeholder="192.168.2.10"
-            className="w-full p-2.5 bg-slate-900 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-network-blue transition-all"
+            className={`w-full p-2.5 bg-slate-900 border ${
+              errors.destIp
+                ? 'border-red-500 focus:ring-red-500'
+                : 'border-slate-600 focus:ring-network-blue'
+            } rounded-lg text-white focus:outline-none focus:ring-2 transition-all`}
           />
+          {errors.destIp && (
+            <p className="text-red-500 text-xs text-left mt-1">
+              {errors.destIp}
+            </p>
+          )}
         </div>
       </div>
 
@@ -68,11 +103,20 @@ export const SimulationFormUI = (props: FormProp) => {
           <input
             type="number"
             name="srcPort"
-            value={props.formData.srcPort}
-            onChange={props.handleChange}
+            value={values.srcPort}
+            onChange={handleChange}
             placeholder="8080"
-            className="w-full p-2.5 bg-slate-900 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-network-blue transition-all"
+            className={`w-full p-2.5 bg-slate-900 border ${
+              errors.srcPort
+                ? 'border-red-500 focus:ring-red-500'
+                : 'border-slate-600 focus:ring-network-blue'
+            } rounded-lg text-white focus:outline-none focus:ring-2 transition-all`}
           />
+          {errors.srcPort && (
+            <p className="text-red-500 text-xs text-left mt-1">
+              {errors.srcPort}
+            </p>
+          )}
         </div>
         <div className="space-y-2">
           <label className="block text-sm font-medium text-slate-300 text-left">
@@ -81,11 +125,20 @@ export const SimulationFormUI = (props: FormProp) => {
           <input
             type="number"
             name="destPort"
-            value={props.formData.destPort}
-            onChange={props.handleChange}
+            value={values.destPort}
+            onChange={handleChange}
             placeholder="8081"
-            className="w-full p-2.5 bg-slate-900 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-network-blue transition-all"
+            className={`w-full p-2.5 bg-slate-900 border ${
+              errors.destPort
+                ? 'border-red-500 focus:ring-red-500'
+                : 'border-slate-600 focus:ring-network-blue'
+            } rounded-lg text-white focus:outline-none focus:ring-2 transition-all`}
           />
+          {errors.destPort && (
+            <p className="text-red-500 text-xs text-left mt-1">
+              {errors.destPort}
+            </p>
+          )}
         </div>
       </div>
 
@@ -96,14 +149,23 @@ export const SimulationFormUI = (props: FormProp) => {
           </label>
           <select
             name="appProtocol"
-            value={props.formData.appProtocol}
-            onChange={props.handleChange}
-            className="w-full p-2.5 bg-slate-900 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-network-blue transition-all cursor-pointer"
+            value={values.appProtocol}
+            onChange={handleChange}
+            className={`w-full p-2.5 bg-slate-900 border ${
+              errors.appProtocol
+                ? 'border-red-500 focus:ring-red-500'
+                : 'border-slate-600 focus:ring-network-blue'
+            } rounded-lg text-white focus:outline-none focus:ring-2 transition-all cursor-pointer`}
           >
             <option value="HTTP">HTTP</option>
             <option value="HTTPS">HTTPS</option>
             <option value="FTP">FTP</option>
           </select>
+          {errors.appProtocol && (
+            <p className="text-red-500 text-xs text-left mt-1">
+              {errors.appProtocol}
+            </p>
+          )}
         </div>
         <div className="space-y-2">
           <label className="block text-sm font-medium text-slate-300 text-left">
@@ -111,15 +173,24 @@ export const SimulationFormUI = (props: FormProp) => {
           </label>
           <select
             name="appMethod"
-            value={props.formData.appMethod}
-            onChange={props.handleChange}
-            className="w-full p-2.5 bg-slate-900 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-network-blue transition-all cursor-pointer"
+            value={values.appMethod}
+            onChange={handleChange}
+            className={`w-full p-2.5 bg-slate-900 border ${
+              errors.appMethod
+                ? 'border-red-500 focus:ring-red-500'
+                : 'border-slate-600 focus:ring-network-blue'
+            } rounded-lg text-white focus:outline-none focus:ring-2 transition-all cursor-pointer`}
           >
             <option value="POST">POST</option>
             <option value="GET">GET</option>
             <option value="PUT">PUT</option>
             <option value="DELETE">DELETE</option>
           </select>
+          {errors.appMethod && (
+            <p className="text-red-500 text-xs text-left mt-1">
+              {errors.appMethod}
+            </p>
+          )}
         </div>
       </div>
 
@@ -129,9 +200,8 @@ export const SimulationFormUI = (props: FormProp) => {
             <label className="block text-sm font-medium text-slate-300 text-left">
               Packet Drop Chance
             </label>
-            {/* Display the percentage value here */}
             <span className="text-sm font-bold text-network-blue">
-              {Math.round(props.formData.dropChance! * 100)}%
+              {Math.round((values.dropChance || 0) * 100)}%
             </span>
           </div>
 
@@ -140,24 +210,31 @@ export const SimulationFormUI = (props: FormProp) => {
             name="dropChance"
             min="0"
             max="1"
-            step="0.01" // Allow 1% increments
-            value={props.formData.dropChance}
-            onChange={props.handleChange}
-            className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-network-blue"
+            step="0.01"
+            value={values.dropChance || 0}
+            onChange={handleChange}
+            className={`w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer ${
+              errors.dropChance ? 'accent-red-500' : 'accent-network-blue'
+            }`}
           />
+          {errors.dropChance && (
+            <p className="text-red-500 text-xs text-left mt-1">
+              {errors.dropChance}
+            </p>
+          )}
         </div>
       </div>
 
       <button
         type="submit"
-        disabled={props.loading}
+        disabled={isSubmitting}
         className={`w-full py-3 px-4 font-bold rounded-lg shadow-lg transform active:scale-95 transition-all duration-150 ${
-          props.loading
+          isSubmitting
             ? 'bg-slate-600 text-slate-400 cursor-not-allowed'
             : 'bg-network-blue hover:bg-blue-600 text-white hover:shadow-blue-500/20'
         }`}
       >
-        {props.loading ? (
+        {isSubmitting ? (
           <span className="flex items-center justify-center space-x-2">
             <svg
               className="animate-spin h-5 w-5 text-white"

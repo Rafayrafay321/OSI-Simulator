@@ -1,36 +1,36 @@
-// React Imports
 import React, { useState, useEffect } from 'react';
 
 // Custom Imports
-import { SimulationFormUI } from './simulationFormUI.tsx';
-import NetworkMapUI from './NetworkMapUI.tsx';
-import { LogItem } from './logItemUI.tsx';
+import { SimulationFormUI } from './simulationFormUI';
+import NetworkMapUI from './NetworkMapUI';
+import { LogItem } from './logItemUI';
 
 // Types
-import type {
-  LogEntry,
-  simulationConfig,
-} from '../../../backend/src/types/index.ts';
+import type { LogEntry } from '../../../backend/src/types/index';
+import {
+  simulationConfigSchema,
+  type FormSchemaType,
+} from '../schemas/simulationSchema';
 
 export const SimulationContainer = () => {
-  const [formData, setFormData] = useState<simulationConfig>({
-    payload: 'Hello world',
-    srcIp: '192.168.1.10',
-    destIp: '192.168.2.10',
-    srcPort: 8000,
-    destPort: 8001,
-    appProtocol: 'HTTPS',
+  const [formData, setFormData] = useState<FormSchemaType>({
+    payload: 'Hey bitch',
+    srcIp: '127.0.0.1',
+    destIp: '192.168.1.2',
+    srcPort: 49152,
+    destPort: 80,
+    appProtocol: 'HTTP',
     appMethod: 'POST',
     dropChance: 0,
   });
-  const [simulationLogs, setSimulationLogs] = useState<LogEntry[]>([]);
+  const [formError, setFormError] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [simulationLogs, setSimulationLogs] = useState<LogEntry[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [formError, setFormError] = useState<Record<string, string>>();
 
   useEffect(() => {
     if (simulationLogs.length === 0) return;
-
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCurrentIndex(0);
 
     const interval = setInterval(() => {
@@ -47,28 +47,57 @@ export const SimulationContainer = () => {
   }, [simulationLogs]);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >,
   ) => {
     const { name, value } = e.target;
+    const newValue =
+      name.includes('Port') || name === 'dropChance' ? Number(value) : value;
+
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: newValue,
     }));
+
+    if (formError[name]) {
+      setFormError((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
   };
 
   const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    const result = simulationConfigSchema.safeParse(formData);
+
+    if (!result.success) {
+      const newErrors: Record<string, string> = {};
+      result.error.issues.forEach((err) => {
+        if (err.path[0]) {
+          newErrors[err.path[0].toString()] = err.message;
+        }
+      });
+      setFormError(newErrors);
+      return;
+    }
+
     try {
       setLoading(true);
       setSimulationLogs([]);
+
       const response = await fetch('http://localhost:3001/api/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
-      const data = await response.json();
 
-      setSimulationLogs(data.response || data.logs || []);
+      const data = await response.json();
+      setSimulationLogs(data.response || []);
+
       setLoading(false);
     } catch (error) {
       setLoading(false);
@@ -94,10 +123,11 @@ export const SimulationContainer = () => {
       <main className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
         <section className="flex justify-center">
           <SimulationFormUI
-            formData={formData}
+            values={formData}
             handleChange={handleChange}
             handleSubmit={handleSubmit}
-            loading={loading}
+            isSubmitting={loading}
+            errors={formError || {}}
           />
         </section>
 
