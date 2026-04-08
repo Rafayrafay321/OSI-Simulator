@@ -74,11 +74,6 @@ export class NetworkLayer implements ILayer {
       );
       throw new Error('Payload can not be empty');
     }
-    this.logger.log(
-      LayerLevel.NETWORK,
-      'Handling outgoing packet.',
-      LogLevel.INFO,
-    );
 
     // Use IPs from metadata if they exist (e.g., when forwarding), otherwise use configured IPs
     const packetSrcIp = packet.metadata.sourceIp || this.srcIp;
@@ -133,6 +128,20 @@ export class NetworkLayer implements ILayer {
           sourceIp: packetSrcIp,
           destinationIp: packetDestIp,
         };
+
+        const newFragmentPacketClone = newFragmentPacket.clone();
+
+        this.logger.log(
+          LayerLevel.TRANSPORT,
+          `Segment ${i + 1} header's added successfully.`,
+          LogLevel.INFO,
+          {
+            payload: newFragmentPacketClone.payload,
+            headers: newFragmentPacketClone.headers,
+            metadata: newFragmentPacketClone.metadata,
+          },
+        );
+
         this.logger.log(
           LayerLevel.NETWORK,
           `Passing fragment ${i + 1} to Data Link Layer.`,
@@ -161,6 +170,20 @@ export class NetworkLayer implements ILayer {
         sourceIp: packetSrcIp,
         destinationIp: packetDestIp,
       };
+
+      const packetClone = packet.clone();
+
+      this.logger.log(
+        LayerLevel.TRANSPORT,
+        "Packet header's added successfully.",
+        LogLevel.INFO,
+        {
+          payload: packetClone.payload,
+          headers: packetClone.headers,
+          metadata: packetClone.metadata,
+        },
+      );
+
       this.logger.log(
         LayerLevel.NETWORK,
         'Passing packet to Data Link Layer.',

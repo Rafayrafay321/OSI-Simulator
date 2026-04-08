@@ -76,12 +76,6 @@ export class DataLinkLayer implements ILayer {
       throw new Error('Destination IP address can not be empty');
     }
 
-    this.logger.log(
-      LayerLevel.DATA_LINK,
-      'Handling outgoing packet.',
-      LogLevel.INFO,
-    );
-
     const nextHopIp = this.defaultGateway || packet.metadata.destinationIp;
     console.log(nextHopIp);
     const destMac = this.arpCache.get(nextHopIp);
@@ -116,22 +110,25 @@ export class DataLinkLayer implements ILayer {
     });
 
     packet.metadata.currentLayer = LayerLevel.DATA_LINK;
+    
+    const packetClone = packet.clone();
     this.logger.log(
       LayerLevel.DATA_LINK,
       'Passing packet to Physical Layer.',
       LogLevel.INFO,
+      {
+        payload: packetClone.payload,
+        headers: packetClone.headers,
+        metadata: packetClone.metadata,
+      },
     );
+
     return packet;
   }
 
   public handleIncoming(packet: BasePacket): BasePacket | null {
     packet.metadata.currentLayer = LayerLevel.DATA_LINK;
     const BROADCAST_MAC_ADDRESS = env.BOARDCAST_MAC_ADD;
-    this.logger.log(
-      LayerLevel.DATA_LINK,
-      'Handling incoming packet.',
-      LogLevel.INFO,
-    );
 
     const incommingPaylaod = packet.getPayload();
     if (!incommingPaylaod) {

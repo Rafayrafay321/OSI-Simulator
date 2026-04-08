@@ -58,6 +58,7 @@ export interface LogEntry {
   message: string;
   layer: LayerLevel;
   type: LogLevel;
+  packetSnapshot?: Record<string, any>;
 }
 
 export type payloadObject = {

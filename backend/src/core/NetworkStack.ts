@@ -14,11 +14,6 @@ export class NetworkStack {
 
   public registerLayer(layer: ILayer) {
     this.layers.set(layer.level, layer);
-    this.logger.log(
-      layer.level,
-      `Layer registered: ${layer.name} at level ${layer.level}`,
-      LogLevel.INFO,
-    );
   }
 
   public routeIncoming(packet: BasePacket) {
@@ -51,11 +46,7 @@ export class NetworkStack {
       return;
     }
     let currentLayer = layer[layerIndex];
-    this.logger.log(
-      currentLayer.level,
-      `Sending data down through ${currentLayer.name}`,
-      LogLevel.INFO,
-    );
+
     const result = currentLayer.handleOutgoing(packet);
 
     if (!result) return;
@@ -103,11 +94,6 @@ export class NetworkStack {
     for (const layer of allLayers) {
       if (!currentPacket) break;
 
-      this.logger.log(
-        layer.level,
-        `Sending data Up through ${layer.name}`,
-        LogLevel.INFO,
-      );
       currentPacket = layer.handleIncoming(currentPacket);
     }
     return currentPacket;

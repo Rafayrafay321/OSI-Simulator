@@ -28,18 +28,6 @@ export class PhysicalLayer implements ILayer {
       throw new Error(errorMsg);
     }
 
-    this.logger.log(
-      LayerLevel.PHYSICAL,
-      'Handling outgoing packet.',
-      LogLevel.INFO,
-    );
-
-    const rawData = this.serializePacket(packet);
-    this.logger.log(
-      LayerLevel.PHYSICAL,
-      `Transmitting ${rawData.length} bytes.`,
-      LogLevel.INFO,
-    );
     packet.metadata.currentLayer = LayerLevel.PHYSICAL;
 
     const probabilityOfPacketDrop = Math.random();
@@ -67,15 +55,9 @@ export class PhysicalLayer implements ILayer {
   }
 
   public handleIncoming(packet: BasePacket): BasePacket | null {
-    this.logger.log(
-      LayerLevel.PHYSICAL,
-      'Handling incoming packet.',
-      LogLevel.INFO,
-    );
     const incomingPayload = packet.getPayload();
     if (incomingPayload) {
       packet.setPayload(incomingPayload);
-      this.logger.log(LayerLevel.PHYSICAL, 'Received raw data.', LogLevel.INFO);
     }
     // In a real simulation, we would deserialize the payload here.
     // Since we are passing the BasePacket object directly, we just pass it on.

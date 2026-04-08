@@ -54,12 +54,6 @@ export class TransportLayer implements ILayer {
       throw new Error('Payload can not be empty');
     }
 
-    this.logger.log(
-      LayerLevel.TRANSPORT,
-      'Handling outgoing packet.',
-      LogLevel.INFO,
-    );
-
     const MSS = env.CONFIG_MSS as number;
     const payloadLength = packet.payload.length;
     const masterCheckSum = calculateChecksum(packet.payload);
@@ -103,6 +97,20 @@ export class TransportLayer implements ILayer {
           direction: PacketDirection.SENDER_TO_RECEIVER,
           status: PacketStatus.HEALTHY,
         };
+
+        const newSegmentPacketClone = newSegmentPacket.clone();
+
+        this.logger.log(
+          LayerLevel.TRANSPORT,
+          `Segment ${i + 1} header's added successfully.`,
+          LogLevel.INFO,
+          {
+            payload: newSegmentPacketClone.payload,
+            headers: newSegmentPacketClone.headers,
+            metadata: newSegmentPacketClone.metadata,
+          },
+        );
+
         this.logger.log(
           LayerLevel.TRANSPORT,
           `Passing segment ${i + 1} to Network Layer.`,
@@ -131,6 +139,20 @@ export class TransportLayer implements ILayer {
         direction: PacketDirection.SENDER_TO_RECEIVER,
         status: PacketStatus.HEALTHY,
       };
+
+      const packetClone = packet.clone();
+
+      this.logger.log(
+        LayerLevel.TRANSPORT,
+        "Packet header's added successfully.",
+        LogLevel.INFO,
+        {
+          payload: packetClone.payload,
+          headers: packetClone.headers,
+          metadata: packetClone.metadata,
+        },
+      );
+
       this.logger.log(
         LayerLevel.TRANSPORT,
         'Passing packet to Network Layer.',
@@ -142,6 +164,7 @@ export class TransportLayer implements ILayer {
 
   public handleIncoming(packet: BasePacket): BasePacket | null {
     packet.metadata.currentLayer = LayerLevel.TRANSPORT;
+
     this.logger.log(
       LayerLevel.TRANSPORT,
       'Handling incoming packet.',
@@ -149,9 +172,20 @@ export class TransportLayer implements ILayer {
     );
     const header = packet.getHeader() as TransportLayerData;
 
-    const payload = packet.payload as string;
-
     if (header.totalSegment === 1) {
+      const packetClone = packet.clone();
+
+      this.logger.log(
+        LayerLevel.TRANSPORT,
+        'Packet Recived from network Layer.',
+        LogLevel.INFO,
+        {
+          payload: packetClone.payload,
+          headers: packetClone.headers,
+          metadata: packetClone.metadata,
+        },
+      );
+
       this.logger.log(
         LayerLevel.TRANSPORT,
         'Passing single packet up to Application Layer.',
@@ -167,6 +201,18 @@ export class TransportLayer implements ILayer {
       this.segmentBuffer.set(packetId, []);
     }
     const buffer = this.segmentBuffer.get(packetId) as BasePacket[];
+
+    const packetClone = packet.clone();
+    this.logger.log(
+      LayerLevel.TRANSPORT,
+      `Segment ${header.segmentIndex} of ${header.totalSegment}. recieved from networkLayer`,
+      LogLevel.INFO,
+      {
+        payload: packetClone.payload,
+        headers: packetClone.headers,
+        metadata: packetClone.metadata,
+      },
+    );
 
     buffer.push(packet);
     this.logger.log(
@@ -202,6 +248,19 @@ export class TransportLayer implements ILayer {
       reassembledPacket.metadata = { ...firstSegment.metadata };
 
       reassembledPacket.setPayload(finalPayload);
+
+      const reassambledPacketClone = reassembledPacket.clone();
+      this.logger.log(
+        LayerLevel.TRANSPORT,
+        'All segments received. Reassembled successfully.',
+        LogLevel.SUCCESS,
+        {
+          payload: reassambledPacketClone.payload,
+          headers: reassambledPacketClone.headers,
+          metadata: reassambledPacketClone.metadata,
+        },
+      );
+
       reassembledPacket.removeHeader();
 
       this.segmentBuffer.delete(packetId);

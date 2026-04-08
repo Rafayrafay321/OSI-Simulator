@@ -31,11 +31,6 @@ export class ApplicationLayer implements ILayer {
     }
 
     if (typeof payload === 'object') {
-      this.logger.log(
-        LayerLevel.APPLICATION,
-        `Encoding outgoing payload to JSON...`,
-        LogLevel.INFO,
-      );
       packet.setPayload(JSON.stringify(payload));
     }
 
@@ -44,6 +39,19 @@ export class ApplicationLayer implements ILayer {
       method: this.method,
       contentType: 'application/json',
     });
+
+    const clonedPacket = packet.clone();
+
+    this.logger.log(
+      LayerLevel.APPLICATION,
+      "Application layer's header added successfully",
+      LogLevel.INFO,
+      {
+        payload: clonedPacket.payload,
+        packetHeaders: clonedPacket.headers,
+        packetMetadata: clonedPacket.metadata,
+      },
+    );
     return packet;
   };
 
@@ -54,11 +62,19 @@ export class ApplicationLayer implements ILayer {
       return null;
     }
 
+    const packetClone = packet.clone();
+
     this.logger.log(
       LayerLevel.APPLICATION,
-      `Parsing incoming JSON payload...`,
+      'Received Packet from transport Layer.',
       LogLevel.INFO,
+      {
+        payload: packetClone.payload,
+        headers: packetClone.headers,
+        metadata: packetClone.metadata,
+      },
     );
+
     const jsonPayload = JSON.stringify(payload);
 
     try {

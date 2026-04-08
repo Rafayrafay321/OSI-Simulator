@@ -82,10 +82,22 @@ export class Orchestrator {
       );
       const finalPacket = this.hostB.onReceipt(packet.clone());
 
-      onComplete({
-        finalPayload: finalPacket!.getPayload(),
-        logs: this.logger.getLogs(),
-      });
+      if (finalPacket) {
+        this.logger.log(
+          LayerLevel.APPLICATION,
+          'Host B received final payload',
+          LogLevel.SUCCESS,
+        );
+        onComplete({
+          finalPayload: finalPacket.getPayload(),
+          logs: this.logger.getLogs(),
+        });
+      } else {
+         // If we don't get a final packet, it might be buffered (fragmentation) or dropped internally.
+         // Since fragments are processed synchronously, we can use a setTimeout to resolve if it truly hangs,
+         // but for now we'll rely on onDataDroped or the final fragment to resolve.
+         // We will NOT call onComplete here for null packets to avoid ending the simulation during fragmentation.
+      }
     };
 
     this.hostA.physicalLayer.onDataDroped = () => {
