@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { SimulationFormUI } from './simulationFormUI';
 import NetworkMapUI from './NetworkMapUI';
 import { LogItem } from './logItemUI';
+import { PacketInspectorUI } from './PacketInspectorUI';
 
 // Types
 import type { LogEntry } from '../../../backend/src/types/index';
@@ -27,6 +28,7 @@ export const SimulationContainer = () => {
   const [loading, setLoading] = useState(false);
   const [simulationLogs, setSimulationLogs] = useState<LogEntry[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [selectedLog, setSelectedLog] = useState<LogEntry | null>(null);
 
   useEffect(() => {
     if (simulationLogs.length === 0) return;
@@ -88,6 +90,7 @@ export const SimulationContainer = () => {
     try {
       setLoading(true);
       setSimulationLogs([]);
+      setSelectedLog(null);
 
       const response = await fetch('http://localhost:3001/api/send', {
         method: 'POST',
@@ -104,7 +107,6 @@ export const SimulationContainer = () => {
       console.log('Simulation Failed', error);
     }
   };
-
   const visibleLogs = simulationLogs.slice(0, currentIndex + 1);
 
   return (
@@ -119,6 +121,8 @@ export const SimulationContainer = () => {
       </header>
 
       <NetworkMapUI logs={simulationLogs} currentIndex={currentIndex} />
+      
+      <PacketInspectorUI log={selectedLog} />
 
       <main className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
         <section className="flex justify-center">
@@ -145,7 +149,12 @@ export const SimulationContainer = () => {
           <div className="flex-1 overflow-y-auto p-4 space-y-1 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
             {visibleLogs.length > 0 ? (
               visibleLogs.map((log: LogEntry, index: number) => (
-                <LogItem key={index} log={log} />
+                <LogItem
+                  key={index}
+                  log={log}
+                  onClick={() => setSelectedLog(log)}
+                  isSelected={selectedLog === log}
+                />
               ))
             ) : (
               <div className="h-full flex flex-col items-center justify-center text-slate-600 space-y-4">

@@ -1,6 +1,14 @@
 import type { LogEntry } from '../../../backend/src/types';
+import { InspectIconUI } from './InspectPacketIconUI';
 
-export const LogItem = ({ log }: { log: LogEntry }) => {
+interface LogItemProps {
+  log: LogEntry;
+  isSelected: boolean;
+  onClick: () => void;
+}
+
+export const LogItem = ({ log, isSelected, onClick }: LogItemProps) => {
+  const hasSnapShot = !!log.packetSnapshot;
   const getLogStyle = () => {
     switch (log.type) {
       case 'SUCCESS':
@@ -20,10 +28,16 @@ export const LogItem = ({ log }: { log: LogEntry }) => {
   });
 
   return (
-    <div className={`p-3 my-1 font-mono text-sm rounded shadow-sm flex items-start space-x-3 ${getLogStyle()}`}>
+    <div
+      onClick={hasSnapShot ? onClick : undefined}
+      className={`group relative p-3 my-1 font-mono text-sm rounded shadow-sm flex items-start space-x-3 ${hasSnapShot ? 'cursor-pointer transition-all duration-200 hover:brightness-125 hover:pl-4' : 'cursor-default'} ${
+        isSelected ? 'ring-2 ring-white bg-slate-800' : ''
+      } ${getLogStyle()}`}
+    >
       <span className="text-gray-500 whitespace-nowrap">[{formattedTime}]</span>
       <span className="font-bold min-w-[120px]">[{log.layer}]</span>
-      <span className="flex-1">{log.message}</span>
+      <span className="flex-1 truncate">{log.message}</span>
+      {hasSnapShot && <InspectIconUI />}
     </div>
   );
 };
