@@ -32,7 +32,7 @@ export const SimulationContainer = () => {
 
   useEffect(() => {
     if (simulationLogs.length === 0) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+
     setCurrentIndex(0);
 
     const interval = setInterval(() => {
@@ -111,76 +111,83 @@ export const SimulationContainer = () => {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-6 md:p-12 w-full">
-      <header className="max-w-7xl mx-auto mb-12 text-center">
-        <h1 className="text-4xl md:text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400 mb-4">
-          OSI Packet Simulator
-        </h1>
-        <p className="text-slate-400 text-lg">
-          Visualize data flow through the networking stack in real-time
-        </p>
-      </header>
+      <div className="bg-noise"></div>
+      <div className="relative z-10">
+        <header className="max-w-7xl mx-auto mb-12 text-center">
+          <h1 className="text-4xl md:text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400 mb-4">
+            OSI Packet Simulator
+          </h1>
+          <p className="text-slate-400 text-lg">
+            Visualize data flow through the networking stack in real-time
+          </p>
+        </header>
 
-      <NetworkMapUI logs={simulationLogs} currentIndex={currentIndex} />
-      
-      <PacketInspectorUI log={selectedLog} />
+        <NetworkMapUI
+          logs={simulationLogs}
+          currentIndex={currentIndex}
+          srcIpAddress={formData.srcIp}
+          destIpAddress={formData.destIp}
+        />
 
-      <main className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-        <section className="flex justify-center">
-          <SimulationFormUI
-            values={formData}
-            handleChange={handleChange}
-            handleSubmit={handleSubmit}
-            isSubmitting={loading}
-            errors={formError || {}}
-          />
-        </section>
+        <PacketInspectorUI log={selectedLog} />
 
-        <section className="bg-slate-900 rounded-xl border border-slate-800 shadow-2xl overflow-hidden flex flex-col h-[600px]">
-          <div className="bg-slate-800 px-6 py-4 border-b border-slate-700 flex justify-between items-center">
-            <h2 className="font-bold text-slate-200 uppercase tracking-wider text-sm flex items-center">
-              <span className="w-2 h-2 bg-emerald-500 rounded-full mr-2 animate-pulse"></span>
-              Live Simulation Logs
-            </h2>
-            <span className="text-xs text-slate-500 font-mono">
-              {visibleLogs.length} / {simulationLogs.length || 0} entries
-            </span>
-          </div>
+        <main className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+          <section className="flex justify-center">
+            <SimulationFormUI
+              values={formData}
+              handleChange={handleChange}
+              handleSubmit={handleSubmit}
+              isSubmitting={loading}
+              errors={formError || {}}
+            />
+          </section>
 
-          <div className="flex-1 overflow-y-auto p-4 space-y-1 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
-            {visibleLogs.length > 0 ? (
-              visibleLogs.map((log: LogEntry, index: number) => (
-                <LogItem
-                  key={index}
-                  log={log}
-                  onClick={() => setSelectedLog(log)}
-                  isSelected={selectedLog === log}
-                />
-              ))
-            ) : (
-              <div className="h-full flex flex-col items-center justify-center text-slate-600 space-y-4">
-                <svg
-                  className="w-16 h-16 opacity-20"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1}
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          <section className="bg-slate-900 rounded-xl border border-slate-800 shadow-lg shadow-black/40 overflow-hidden flex flex-col h-[600px] bg-gradient-to-b from-white/[0.03] to-transparent shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+            <div className="bg-slate-900/50 px-6 py-4 border-b border-slate-800 flex justify-between items-center">
+              <h2 className="font-semibold tracking-tight text-slate-200 text-lg flex items-center">
+                <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
+                Live Simulation Logs
+              </h2>
+              <span className="text-xs text-slate-500 font-mono bg-slate-950 px-2 py-1 rounded border border-slate-800">
+                {visibleLogs.length} / {simulationLogs.length || 0} entries
+              </span>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-1 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
+              {visibleLogs.length > 0 ? (
+                visibleLogs.map((log: LogEntry, index: number) => (
+                  <LogItem
+                    key={index}
+                    log={log}
+                    onClick={() => setSelectedLog(log)}
+                    isSelected={selectedLog === log}
                   />
-                </svg>
-                <p className="italic">Waiting for simulation to start...</p>
-              </div>
-            )}
-          </div>
-        </section>
-      </main>
+                ))
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center text-slate-600 space-y-4">
+                  <svg
+                    className="w-16 h-16 opacity-20"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1}
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
+                  <p className="italic">Waiting for simulation to start...</p>
+                </div>
+              )}
+            </div>
+          </section>
+        </main>
 
-      <footer className="max-w-7xl mx-auto mt-12 pt-8 border-t border-slate-900 text-center text-slate-600 text-sm">
-        <p>&copy; 2026 OSI Packet Simulator. All layers active.</p>
-      </footer>
+        <footer className="max-w-7xl mx-auto mt-12 pt-8 border-t border-slate-900 text-center text-slate-600 text-sm">
+          <p>&copy; 2026 OSI Packet Simulator. All layers active.</p>
+        </footer>
+      </div>
     </div>
   );
 };

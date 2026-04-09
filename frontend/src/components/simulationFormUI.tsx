@@ -24,10 +24,10 @@ export const SimulationFormUI: React.FC<SimulationFormProp> = ({
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-6 bg-slate-800 p-8 rounded-xl shadow-2xl border border-slate-700 w-full max-w-lg"
+      className="space-y-6 bg-slate-900 p-8 rounded-xl shadow-lg shadow-black/40 border border-slate-800 w-full max-w-lg bg-gradient-to-b from-white/[0.03] to-transparent shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
     >
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-slate-300">
+        <label className="block text-sm font-semibold text-slate-300 tracking-tight">
           Payload
         </label>
         <textarea
@@ -35,11 +35,11 @@ export const SimulationFormUI: React.FC<SimulationFormProp> = ({
           value={values.payload}
           onChange={handleChange}
           placeholder="Enter the message you want to simulate..."
-          className={`w-full h-24 p-3 bg-slate-900 border ${
+          className={`w-full h-24 p-3 bg-slate-950 border ${
             errors.payload
-              ? 'border-red-500 focus:ring-red-500'
-              : 'border-slate-600 focus:ring-network-blue'
-          } rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 transition-all`}
+              ? 'border-red-500 focus:ring-red-500/50'
+              : 'border-slate-800 focus:border-blue-500 focus:ring-blue-500/50'
+          } rounded-md text-slate-200 font-mono text-sm placeholder-slate-600 focus:outline-none focus:ring-2 transition-all`}
         />
         {errors.payload && (
           <p className="text-red-500 text-xs text-left mt-1">
@@ -50,7 +50,7 @@ export const SimulationFormUI: React.FC<SimulationFormProp> = ({
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-slate-300 text-left">
+          <label className="block text-sm font-semibold text-slate-300 text-left tracking-tight">
             Source IP
           </label>
           <input
@@ -59,11 +59,11 @@ export const SimulationFormUI: React.FC<SimulationFormProp> = ({
             value={values.srcIp}
             onChange={handleChange}
             placeholder="192.168.1.10"
-            className={`w-full p-2.5 bg-slate-900 border ${
+            className={`w-full p-2.5 bg-slate-950 border ${
               errors.srcIp
-                ? 'border-red-500 focus:ring-red-500'
-                : 'border-slate-600 focus:ring-network-blue'
-            } rounded-lg text-white focus:outline-none focus:ring-2 transition-all`}
+                ? 'border-red-500 focus:ring-red-500/50'
+                : 'border-slate-800 focus:border-blue-500 focus:ring-blue-500/50'
+            } rounded-md text-slate-200 font-mono text-sm focus:outline-none focus:ring-2 transition-all`}
           />
           {errors.srcIp && (
             <p className="text-red-500 text-xs text-left mt-1">
@@ -72,7 +72,7 @@ export const SimulationFormUI: React.FC<SimulationFormProp> = ({
           )}
         </div>
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-slate-300 text-left">
+          <label className="block text-sm font-semibold text-slate-300 text-left tracking-tight">
             Destination IP
           </label>
           <input
@@ -81,11 +81,11 @@ export const SimulationFormUI: React.FC<SimulationFormProp> = ({
             value={values.destIp}
             onChange={handleChange}
             placeholder="192.168.2.10"
-            className={`w-full p-2.5 bg-slate-900 border ${
+            className={`w-full p-2.5 bg-slate-950 border ${
               errors.destIp
-                ? 'border-red-500 focus:ring-red-500'
-                : 'border-slate-600 focus:ring-network-blue'
-            } rounded-lg text-white focus:outline-none focus:ring-2 transition-all`}
+                ? 'border-red-500 focus:ring-red-500/50'
+                : 'border-slate-800 focus:border-blue-500 focus:ring-blue-500/50'
+            } rounded-md text-slate-200 font-mono text-sm focus:outline-none focus:ring-2 transition-all`}
           />
           {errors.destIp && (
             <p className="text-red-500 text-xs text-left mt-1">
@@ -97,7 +97,7 @@ export const SimulationFormUI: React.FC<SimulationFormProp> = ({
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-slate-300 text-left">
+          <label className="block text-sm font-semibold text-slate-300 text-left tracking-tight">
             Source Port
           </label>
           <input
@@ -106,11 +106,11 @@ export const SimulationFormUI: React.FC<SimulationFormProp> = ({
             value={values.srcPort}
             onChange={handleChange}
             placeholder="8080"
-            className={`w-full p-2.5 bg-slate-900 border ${
+            className={`w-full p-2.5 bg-slate-950 border ${
               errors.srcPort
-                ? 'border-red-500 focus:ring-red-500'
-                : 'border-slate-600 focus:ring-network-blue'
-            } rounded-lg text-white focus:outline-none focus:ring-2 transition-all`}
+                ? 'border-red-500 focus:ring-red-500/50'
+                : 'border-slate-800 focus:border-blue-500 focus:ring-blue-500/50'
+            } rounded-md text-slate-200 font-mono text-sm focus:outline-none focus:ring-2 transition-all`}
           />
           {errors.srcPort && (
             <p className="text-red-500 text-xs text-left mt-1">
@@ -119,7 +119,7 @@ export const SimulationFormUI: React.FC<SimulationFormProp> = ({
           )}
         </div>
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-slate-300 text-left">
+          <label className="block text-sm font-semibold text-slate-300 text-left tracking-tight">
             Destination Port
           </label>
           <input
@@ -128,11 +128,11 @@ export const SimulationFormUI: React.FC<SimulationFormProp> = ({
             value={values.destPort}
             onChange={handleChange}
             placeholder="8081"
-            className={`w-full p-2.5 bg-slate-900 border ${
+            className={`w-full p-2.5 bg-slate-950 border ${
               errors.destPort
-                ? 'border-red-500 focus:ring-red-500'
-                : 'border-slate-600 focus:ring-network-blue'
-            } rounded-lg text-white focus:outline-none focus:ring-2 transition-all`}
+                ? 'border-red-500 focus:ring-red-500/50'
+                : 'border-slate-800 focus:border-blue-500 focus:ring-blue-500/50'
+            } rounded-md text-slate-200 font-mono text-sm focus:outline-none focus:ring-2 transition-all`}
           />
           {errors.destPort && (
             <p className="text-red-500 text-xs text-left mt-1">
@@ -144,18 +144,18 @@ export const SimulationFormUI: React.FC<SimulationFormProp> = ({
 
       <div className="grid grid-cols-2 gap-4 items-end">
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-slate-300 text-left">
+          <label className="block text-sm font-semibold text-slate-300 text-left tracking-tight">
             App Protocol
           </label>
           <select
             name="appProtocol"
             value={values.appProtocol}
             onChange={handleChange}
-            className={`w-full p-2.5 bg-slate-900 border ${
+            className={`w-full p-2.5 bg-slate-950 border ${
               errors.appProtocol
-                ? 'border-red-500 focus:ring-red-500'
-                : 'border-slate-600 focus:ring-network-blue'
-            } rounded-lg text-white focus:outline-none focus:ring-2 transition-all cursor-pointer`}
+                ? 'border-red-500 focus:ring-red-500/50'
+                : 'border-slate-800 focus:border-blue-500 focus:ring-blue-500/50'
+            } rounded-md text-slate-200 font-mono text-sm focus:outline-none focus:ring-2 transition-all cursor-pointer`}
           >
             <option value="HTTP">HTTP</option>
             <option value="HTTPS">HTTPS</option>
@@ -168,18 +168,18 @@ export const SimulationFormUI: React.FC<SimulationFormProp> = ({
           )}
         </div>
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-slate-300 text-left">
+          <label className="block text-sm font-semibold text-slate-300 text-left tracking-tight">
             App Method
           </label>
           <select
             name="appMethod"
             value={values.appMethod}
             onChange={handleChange}
-            className={`w-full p-2.5 bg-slate-900 border ${
+            className={`w-full p-2.5 bg-slate-950 border ${
               errors.appMethod
-                ? 'border-red-500 focus:ring-red-500'
-                : 'border-slate-600 focus:ring-network-blue'
-            } rounded-lg text-white focus:outline-none focus:ring-2 transition-all cursor-pointer`}
+                ? 'border-red-500 focus:ring-red-500/50'
+                : 'border-slate-800 focus:border-blue-500 focus:ring-blue-500/50'
+            } rounded-md text-slate-200 font-mono text-sm focus:outline-none focus:ring-2 transition-all cursor-pointer`}
           >
             <option value="POST">POST</option>
             <option value="GET">GET</option>
@@ -197,10 +197,10 @@ export const SimulationFormUI: React.FC<SimulationFormProp> = ({
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <div className="flex justify-between items-center">
-            <label className="block text-sm font-medium text-slate-300 text-left">
+            <label className="block text-sm font-semibold text-slate-300 text-left tracking-tight">
               Packet Drop Chance
             </label>
-            <span className="text-sm font-bold text-network-blue">
+            <span className="text-sm font-mono text-blue-400">
               {Math.round((values.dropChance || 0) * 100)}%
             </span>
           </div>
@@ -213,8 +213,8 @@ export const SimulationFormUI: React.FC<SimulationFormProp> = ({
             step="0.01"
             value={values.dropChance || 0}
             onChange={handleChange}
-            className={`w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer ${
-              errors.dropChance ? 'accent-red-500' : 'accent-network-blue'
+            className={`w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer ${
+              errors.dropChance ? 'accent-red-500' : 'accent-blue-500'
             }`}
           />
           {errors.dropChance && (
@@ -228,10 +228,10 @@ export const SimulationFormUI: React.FC<SimulationFormProp> = ({
       <button
         type="submit"
         disabled={isSubmitting}
-        className={`w-full py-3 px-4 font-bold rounded-lg shadow-lg transform active:scale-95 transition-all duration-150 ${
+        className={`w-full py-2.5 px-4 font-semibold tracking-wide rounded-md shadow-md transform active:scale-[0.98] transition-all duration-150 border ${
           isSubmitting
-            ? 'bg-slate-600 text-slate-400 cursor-not-allowed'
-            : 'bg-network-blue hover:bg-blue-600 text-white hover:shadow-blue-500/20'
+            ? 'bg-slate-800 text-slate-500 border-slate-700 cursor-not-allowed'
+            : 'bg-blue-600 hover:brightness-110 text-white border-blue-500 active:shadow-inner'
         }`}
       >
         {isSubmitting ? (

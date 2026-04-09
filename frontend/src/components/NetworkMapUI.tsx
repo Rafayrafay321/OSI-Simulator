@@ -7,6 +7,8 @@ import { useState, useEffect } from 'react';
 interface NetworkMapProps {
   logs: LogEntry[];
   currentIndex: number;
+  srcIpAddress: string;
+  destIpAddress: string;
 }
 
 const determineActiveNode = (
@@ -37,7 +39,12 @@ const determineActiveNode = (
   }
 };
 
-const NetworkMapUI = ({ logs, currentIndex }: NetworkMapProps) => {
+const NetworkMapUI = ({
+  logs,
+  currentIndex,
+  srcIpAddress,
+  destIpAddress,
+}: NetworkMapProps) => {
   const [activeNode, setActiveNode] = useState<string | null>('hostA');
 
   // Determine active node based on current index
@@ -46,7 +53,7 @@ const NetworkMapUI = ({ logs, currentIndex }: NetworkMapProps) => {
       setActiveNode(null);
       return;
     }
-    
+
     if (!logs[currentIndex]) return;
 
     const calculatedNode = determineActiveNode(
@@ -59,40 +66,57 @@ const NetworkMapUI = ({ logs, currentIndex }: NetworkMapProps) => {
   }, [currentIndex, logs]);
 
   return (
-    <div className="w-full bg-slate-900 rounded-xl p-8 border border-slate-800 shadow-2xl mb-8 relative overflow-hidden">
-      <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/20 via-slate-900/0 to-slate-900/0 pointer-events-none"></div>
-
-      <h2 className="text-xl font-bold text-slate-200 mb-10 text-center uppercase tracking-widest text-sm relative z-10">
+    <div className="w-full bg-slate-900 rounded-xl p-8 border border-slate-800 shadow-lg shadow-black/40 bg-gradient-to-b from-white/[0.03] to-transparent shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] mb-8 relative overflow-hidden">
+      <h2 className="text-lg font-semibold text-slate-200 mb-10 text-center tracking-tight relative z-10">
         Live Network Topology
       </h2>
 
-      <div className="flex items-center justify-between max-w-5xl mx-auto relative z-10">
+      <div className="flex items-center justify-between max-w-6xl mx-auto relative z-10 px-4">
         <ServerNode
           label="Host A"
           type="host"
-          colorClass="bg-gradient-to-b from-blue-600 to-slate-900"
-          statusColor="bg-slate-500"
-          isActive={activeNode === 'hostA'}
+          colorClass="bg-slate-800"
+          statusColor="bg-emerald-500"
+          isActive={activeNode === 'hostA' || activeNode === 'linkA'}
+          ipAddress={srcIpAddress}
+          macAddress="AA:AA:AA:AA:AA:AA"
+          activePort={0}
         />
 
-        <ConnectionWireUI isActive={activeNode === 'linkA'} />
+        <ConnectionWireUI
+          isActive={activeNode === 'linkA'}
+          direction="forward"
+        />
 
         <ServerNode
           label="Router"
           type="router"
-          colorClass="bg-gradient-to-b from-slate-700 to-slate-900"
-          statusColor="bg-slate-500"
-          isActive={activeNode === 'router'}
+          colorClass="bg-slate-800"
+          statusColor="bg-emerald-500"
+          isActive={
+            activeNode === 'router' ||
+            activeNode === 'linkA' ||
+            activeNode === 'linkB'
+          }
+          ipAddress="192.168.1.1"
+          macAddress="00:00:5E:00:53:AA"
+          activePort={activeNode === 'linkB' ? 1 : 0}
         />
 
-        <ConnectionWireUI isActive={activeNode === 'linkB'} />
+        <ConnectionWireUI
+          isActive={activeNode === 'linkB'}
+          direction="forward"
+        />
 
         <ServerNode
           label="Host B"
           type="host"
-          colorClass="bg-gradient-to-b from-indigo-600 to-slate-900"
-          statusColor="bg-slate-500"
-          isActive={activeNode === 'hostB'}
+          colorClass="bg-slate-800"
+          statusColor="bg-emerald-500"
+          isActive={activeNode === 'hostB' || activeNode === 'linkB'}
+          ipAddress={destIpAddress}
+          macAddress="BB:BB:BB:BB:BB:BB"
+          activePort={0}
         />
       </div>
     </div>
