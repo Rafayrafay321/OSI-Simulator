@@ -101,7 +101,7 @@ export const SimulationContainer = () => {
       setSimulationLogs([]);
       setSelectedLog(null);
 
-      const response = await fetch('http://localhost:3001/api/send', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/send`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),

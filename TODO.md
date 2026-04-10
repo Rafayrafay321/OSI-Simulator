@@ -55,6 +55,36 @@ A full-stack network simulation tool built to visualize data flow through the OS
 - [ ] **Dynamic Orchestration**: Refactor the backend to instantiate the `Orchestrator` based on an arbitrary JSON topology map rather than a hardcoded `Host -> Router -> Host` chain.
 - [ ] **Multiple Interfaces**: Update the `Router` class to support multiple physical interfaces and a proper Routing Table.
 
+### 🚀 Production Deployment Plan (Zero-Cost AWS Architecture)
+
+**Architecture Blueprint:**
+- **Code Repository & CI/CD:** GitHub + GitHub Actions (Free)
+- **Frontend Hosting (CDN):** AWS Amplify or Vercel (Free Tier)
+- **Backend Hosting (Compute):** AWS EC2 `t2.micro` or `t3.micro` (Free Tier - 750 hrs/month)
+- **Process Management:** PM2 (Open Source)
+- **Reverse Proxy & SSL:** NGINX + Let's Encrypt / Certbot (Free)
+- **DNS Management:** Cloudflare or GitHub Student Developer Pack Domain.
+
+**Execution Phases:**
+- [ ] **Phase 1: Foundation & Safety**
+    - [ ] Push codebase to a private GitHub repository.
+    - [ ] Create an AWS account (or use AWS Educate/Academy).
+    - [ ] **CRITICAL:** Set up an AWS Billing Alarm (Zero Spend Budget) to prevent accidental charges.
+- [ ] **Phase 2: Backend Server Setup**
+    - [ ] Launch an Ubuntu EC2 instance (`t2.micro`, Free Tier eligible).
+    - [ ] Configure Security Groups (Allow SSH:22 from own IP, HTTP:80, HTTPS:443).
+    - [ ] SSH into the server, install Node.js via `nvm`, and clone the repository.
+    - [ ] Build the TypeScript backend and start the process using `pm2`.
+- [ ] **Phase 3: Reverse Proxy & Security**
+    - [ ] Install and configure NGINX to reverse proxy port 80 traffic to `localhost:3001`.
+    - [ ] (Optional) Point a custom student domain to the EC2 Public IP.
+    - [ ] Install Certbot and generate a free SSL certificate for HTTPS.
+- [ ] **Phase 4: Frontend CDN Deployment**
+    - [ ] Update frontend API calls to use environment variables (`import.meta.env.VITE_API_URL`).
+    - [ ] Connect the GitHub repository to AWS Amplify (or Vercel).
+    - [ ] Configure build settings and set production environment variables.
+    - [ ] Trigger the initial automated deployment.
+
 ### Infrastructure & QA
 - [ ] **WebSockets**: Replace REST polling with real-time socket streams for live logs.
 - [ ] **E2E Testing**: Implement Playwright/Cypress tests for the full simulation flow.
