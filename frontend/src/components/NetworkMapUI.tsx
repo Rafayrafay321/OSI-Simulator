@@ -50,6 +50,7 @@ const NetworkMapUI = ({
   // Determine active node based on current index
   useEffect(() => {
     if (logs.length === 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveNode(null);
       return;
     }

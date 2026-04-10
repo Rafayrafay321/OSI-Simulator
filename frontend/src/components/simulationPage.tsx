@@ -30,12 +30,19 @@ export const SimulationContainer = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedLog, setSelectedLog] = useState<LogEntry | null>(null);
   const [packetSize, setPacketSize] = useState<number>(0);
+  const [isPaused, setIsPaused] = useState<boolean>(false);
+  const [layerFilter, setLayerFilter] = useState<string>('All Layers');
+  const [statusFilter, setStatusFilter] = useState<string>('All Status');
 
   useEffect(() => {
-    if (simulationLogs.length === 0) return;
+    if (simulationLogs.length > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setCurrentIndex(0);
+    }
+  }, [simulationLogs]);
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setCurrentIndex(0);
+  useEffect(() => {
+    if (simulationLogs.length === 0 || isPaused) return;
 
     const interval = setInterval(() => {
       setCurrentIndex((prev) => {
@@ -48,7 +55,7 @@ export const SimulationContainer = () => {
     }, 600);
 
     return () => clearInterval(interval);
-  }, [simulationLogs]);
+  }, [simulationLogs, isPaused]);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -110,7 +117,16 @@ export const SimulationContainer = () => {
       console.log('Simulation Failed', error);
     }
   };
-  const visibleLogs = simulationLogs.slice(0, currentIndex + 1);
+
+  const visibleLogs = simulationLogs
+    .slice(0, currentIndex + 1)
+    .filter((log) => {
+      const layerMatch =
+        layerFilter === 'All Layers' || log.layer === layerFilter;
+      const statusMatch =
+        statusFilter === 'All Status' || log.type === statusFilter;
+      return layerMatch && statusMatch;
+    });
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-6 md:p-12 w-full">
@@ -156,6 +172,11 @@ export const SimulationContainer = () => {
             setSelectedLog={setSelectedLog}
             selectedLog={selectedLog}
             visibleLogs={visibleLogs}
+            isPaused={isPaused}
+            setIsPaused={setIsPaused}
+            resetIndex={() => setCurrentIndex(0)}
+            setLayerFilter={setLayerFilter}
+            setStatusFilter={setStatusFilter}
           />
         </main>
 

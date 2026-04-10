@@ -3,6 +3,7 @@ import { LogItem } from './logItemUI';
 
 // types
 import type { LogEntry } from '../../../backend/src/types';
+import { LayerLevel } from '../../../backend/src/types';
 
 export interface LogsTerminalUIProps {
   currentIndex: number;
@@ -10,6 +11,11 @@ export interface LogsTerminalUIProps {
   visibleLogs: LogEntry[];
   selectedLog: LogEntry | null;
   setSelectedLog: (log: LogEntry) => void;
+  isPaused: boolean;
+  setIsPaused: (isPaused: boolean) => void;
+  resetIndex: () => void;
+  setLayerFilter: (value: string) => void;
+  setStatusFilter: (value: string) => void;
 }
 
 export const LogsTerminalUI: React.FC<LogsTerminalUIProps> = ({
@@ -18,6 +24,11 @@ export const LogsTerminalUI: React.FC<LogsTerminalUIProps> = ({
   visibleLogs,
   selectedLog,
   setSelectedLog,
+  setIsPaused,
+  isPaused,
+  resetIndex,
+  setLayerFilter,
+  setStatusFilter,
 }) => {
   return (
     <section className="bg-slate-950 rounded-xl border border-slate-800 shadow-lg shadow-black/40 overflow-hidden flex flex-col h-[600px] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] relative font-mono">
@@ -50,10 +61,16 @@ export const LogsTerminalUI: React.FC<LogsTerminalUIProps> = ({
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <button className="px-3 py-1 bg-slate-800 hover:bg-slate-700 active:scale-95 border border-slate-700 rounded text-xs font-semibold text-slate-300 transition-all shadow-sm">
-              Pause Stream
+            <button
+              onClick={() => setIsPaused(!isPaused)}
+              className="px-3 py-1 bg-slate-800 hover:bg-slate-700 active:scale-95 border border-slate-700 rounded text-xs font-semibold text-slate-300 transition-all shadow-sm"
+            >
+              {isPaused === true ? 'Resume Stream' : 'Pause'}
             </button>
-            <button className="px-3 py-1 bg-slate-800 hover:bg-slate-700 active:scale-95 border border-slate-700 rounded text-xs font-semibold text-slate-300 transition-all shadow-sm flex items-center gap-1">
+            <button
+              onClick={resetIndex}
+              className="px-3 py-1 bg-slate-800 hover:bg-slate-700 active:scale-95 border border-slate-700 rounded text-xs font-semibold text-slate-300 transition-all shadow-sm flex items-center gap-1"
+            >
               <svg
                 className="w-3 h-3"
                 fill="none"
@@ -76,7 +93,20 @@ export const LogsTerminalUI: React.FC<LogsTerminalUIProps> = ({
         <div className="px-6 py-2 bg-slate-900/50 flex gap-6 text-xs font-sans shadow-inner shadow-black/20">
           <div className="flex items-center gap-2">
             <span className="text-slate-500">Layer:</span>
-            <select className="bg-slate-950 border border-slate-800 rounded px-2 py-1 text-slate-300 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all cursor-pointer">
+            <select
+              onChange={(e) => {
+                const selectedValue = e.target.value;
+                if (selectedValue === 'All Layers') {
+                  setLayerFilter(selectedValue);
+                  return;
+                } else {
+                  const correspondValue =
+                    LayerLevel[selectedValue as keyof typeof LayerLevel];
+                  setLayerFilter(correspondValue);
+                }
+              }}
+              className="bg-slate-950 border border-slate-800 rounded px-2 py-1 text-slate-300 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all cursor-pointer"
+            >
               <option>All Layers</option>
               <option>APPLICATION</option>
               <option>TRANSPORT</option>
@@ -87,7 +117,10 @@ export const LogsTerminalUI: React.FC<LogsTerminalUIProps> = ({
           </div>
           <div className="flex items-center gap-2">
             <span className="text-slate-500">Status:</span>
-            <select className="bg-slate-950 border border-slate-800 rounded px-2 py-1 text-slate-300 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all cursor-pointer">
+            <select
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="bg-slate-950 border border-slate-800 rounded px-2 py-1 text-slate-300 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all cursor-pointer"
+            >
               <option>All Status</option>
               <option>INFO</option>
               <option>SUCCESS</option>
