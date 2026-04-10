@@ -34,6 +34,17 @@ export const SimulationFormUI: React.FC<SimulationFormProp> = ({
       onSubmit={handleSubmit}
       className="flex flex-col bg-slate-900 rounded-xl shadow-lg shadow-black/40 border border-slate-800 w-full max-w-lg bg-gradient-to-b from-white/[0.03] to-transparent shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] overflow-hidden"
     >
+      {/* // TODO Do the logical part for it which is : * The Goal: When the user clicks "Normal", the form instantly fills with standard values (0% drop chance). When they click "Loss Test", the form fills
+     with a high drop chance (e.g., 50%).
+   * The Setup (simulationPage.tsx):
+       * Create a new function called applyPreset(presetType: 'normal' | 'loss').
+       * Inside this function, use your setFormData function.
+       * Hint: Instead of updating just one field like handleChange does, you will pass an entirely new object to setFormData that matches your
+         FormSchemaType but with the specific preset values.
+   * The Wiring (simulationFormUI.tsx):
+       * Pass your applyPreset function down to SimulationFormUI as a new prop.
+       * Add onClick={() => applyPreset('normal')} to the "Normal" button, and similarly for the "Loss Test" button.*/}
+
       {/* Header & Presets */}
       <div className="bg-slate-900/80 px-6 py-4 border-b border-slate-800 flex justify-between items-center shrink-0">
         <h2 className="font-semibold tracking-tight text-slate-200 text-lg flex items-center">
