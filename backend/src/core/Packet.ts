@@ -1,5 +1,6 @@
 // Types and Interfaces
 import { Header, LayerData } from '../types';
+import { env } from '../config/env';
 import {
   PacketMetaData,
   PacketDirection,
@@ -92,6 +93,16 @@ export class BasePacket {
     const currentLayerheaderData = currentLayerheaderObject.data;
     return currentLayerheaderData;
   }
+
+  public getPacketSize(packet: BasePacket): number {
+    const payloadSize = Number(new Blob([this.payload || '']).size);
+    const ipHeaderSize = Number(env.IP_HEADER_SIZE);
+    const ethernetSize = Number(env.ETHERNET_SIZE);
+    const tcpHeaderSize = Number(env.TCP_HEADER_SIZE);
+
+    return payloadSize + ipHeaderSize + ethernetSize + tcpHeaderSize;
+  }
+
   // Generic header attachment API
   public addHeader(layerName: LayerLevel, data: LayerData): void {
     const header: Header = {

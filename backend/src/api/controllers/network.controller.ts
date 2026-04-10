@@ -15,13 +15,14 @@ export const send = async (req: Request, res: Response, next: NextFunction) => {
   }
   const simulation = new Orchestrator(config);
   try {
-    const logs = await simulation.runSimulation(config);
+    const response = await simulation.runSimulation(config);
 
     res.status(200).json({
       status: 'Success',
       message: 'Simulation ran successfully.',
-      paylaod: logs.finalPayload,
-      response: logs.logs,
+      paylaod: response.finalPayload,
+      packetSize: response.packetSize,
+      logs: response.logs,
     });
     return;
   } catch (error) {

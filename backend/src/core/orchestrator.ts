@@ -63,6 +63,7 @@ export class Orchestrator {
     onComplete: (data: {
       finalPayload: string | null;
       logs: LogEntry[];
+      packetSize: number | null;
     }) => void,
   ) {
     this.hostA.physicalLayer.onDataTransmit = (packet) => {
@@ -91,12 +92,13 @@ export class Orchestrator {
         onComplete({
           finalPayload: finalPacket.getPayload(),
           logs: this.logger.getLogs(),
+          packetSize: finalPacket.getPacketSize(finalPacket),
         });
       } else {
-         // If we don't get a final packet, it might be buffered (fragmentation) or dropped internally.
-         // Since fragments are processed synchronously, we can use a setTimeout to resolve if it truly hangs,
-         // but for now we'll rely on onDataDroped or the final fragment to resolve.
-         // We will NOT call onComplete here for null packets to avoid ending the simulation during fragmentation.
+        // If we don't get a final packet, it might be buffered (fragmentation) or dropped internally.
+        // Since fragments are processed synchronously, we can use a setTimeout to resolve if it truly hangs,
+        // but for now we'll rely on onDataDroped or the final fragment to resolve.
+        // We will NOT call onComplete here for null packets to avoid ending the simulation during fragmentation.
       }
     };
 
@@ -104,19 +106,23 @@ export class Orchestrator {
       onComplete({
         finalPayload: null,
         logs: this.logger.getLogs(),
+        packetSize: null,
       });
     };
     this.router.physicalLayer.onDataDroped = () => {
       onComplete({
         finalPayload: null,
         logs: this.logger.getLogs(),
+        packetSize: null,
       });
     };
   }
 
-  public async runSimulation(
-    config: simulationConfig,
-  ): Promise<{ finalPayload: string | null; logs: LogEntry[] }> {
+  public async runSimulation(config: simulationConfig): Promise<{
+    finalPayload: string | null;
+    logs: LogEntry[];
+    packetSize: number | null;
+  }> {
     this.logger.clearLogs();
 
     return new Promise((resolve) => {

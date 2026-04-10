@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 // Custom Imports
 import { SimulationFormUI } from './simulationFormUI';
 import NetworkMapUI from './NetworkMapUI';
-import { LogItem } from './logItemUI';
+import { LogsTerminalUI } from './logsTerminalUI';
 import { PacketInspectorUI } from './PacketInspectorUI';
 
 // Types
@@ -29,10 +29,12 @@ export const SimulationContainer = () => {
   const [simulationLogs, setSimulationLogs] = useState<LogEntry[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedLog, setSelectedLog] = useState<LogEntry | null>(null);
+  const [packetSize, setPacketSize] = useState<number>(0);
 
   useEffect(() => {
     if (simulationLogs.length === 0) return;
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCurrentIndex(0);
 
     const interval = setInterval(() => {
@@ -99,7 +101,8 @@ export const SimulationContainer = () => {
       });
 
       const data = await response.json();
-      setSimulationLogs(data.response || []);
+      setSimulationLogs(data.logs || []);
+      setPacketSize(data.packetSize);
 
       setLoading(false);
     } catch (error) {
@@ -129,7 +132,13 @@ export const SimulationContainer = () => {
           destIpAddress={formData.destIp}
         />
 
-        <PacketInspectorUI log={selectedLog} />
+        <PacketInspectorUI
+          log={selectedLog}
+          stepIndex={
+            selectedLog ? simulationLogs.indexOf(selectedLog) : undefined
+          }
+          packetSize={packetSize}
+        />
 
         <main className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
           <section className="flex justify-center">
@@ -141,47 +150,13 @@ export const SimulationContainer = () => {
               errors={formError || {}}
             />
           </section>
-
-          <section className="bg-slate-900 rounded-xl border border-slate-800 shadow-lg shadow-black/40 overflow-hidden flex flex-col h-[600px] bg-gradient-to-b from-white/[0.03] to-transparent shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
-            <div className="bg-slate-900/50 px-6 py-4 border-b border-slate-800 flex justify-between items-center">
-              <h2 className="font-semibold tracking-tight text-slate-200 text-lg flex items-center">
-                <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
-                Live Simulation Logs
-              </h2>
-              <span className="text-xs text-slate-500 font-mono bg-slate-950 px-2 py-1 rounded border border-slate-800">
-                {visibleLogs.length} / {simulationLogs.length || 0} entries
-              </span>
-            </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-1 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
-              {visibleLogs.length > 0 ? (
-                visibleLogs.map((log: LogEntry, index: number) => (
-                  <LogItem
-                    key={index}
-                    log={log}
-                    onClick={() => setSelectedLog(log)}
-                    isSelected={selectedLog === log}
-                  />
-                ))
-              ) : (
-                <div className="h-full flex flex-col items-center justify-center text-slate-600 space-y-4">
-                  <svg
-                    className="w-16 h-16 opacity-20"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1}
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
-                  <p className="italic">Waiting for simulation to start...</p>
-                </div>
-              )}
-            </div>
-          </section>
+          <LogsTerminalUI
+            currentIndex={currentIndex}
+            simulationLogs={simulationLogs}
+            setSelectedLog={setSelectedLog}
+            selectedLog={selectedLog}
+            visibleLogs={visibleLogs}
+          />
         </main>
 
         <footer className="max-w-7xl mx-auto mt-12 pt-8 border-t border-slate-900 text-center text-slate-600 text-sm">
