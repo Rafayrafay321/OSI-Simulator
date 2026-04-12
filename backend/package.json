@@ -8,7 +8,7 @@
     "test:watch": "jest --watchAll",
     "test:coverage": "jest --coverage",
     "build": "tsc",
-    "start": "node dist/api/server.js"
+    "prod": "npm run build && pm2 start dist/api/server.js --name osi-backend"
   },
   "keywords": [],
   "author": "",
