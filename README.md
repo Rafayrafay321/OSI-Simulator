@@ -4,115 +4,147 @@
 [![React 19](https://img.shields.io/badge/React_19-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://react.dev/)
 [![Tailwind CSS v4](https://img.shields.io/badge/Tailwind_CSS_v4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![Express.js](https://img.shields.io/badge/Express.js-404D59?style=for-the-badge)](https://expressjs.com/)
+[![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/licenses/ISC)
 
-> A comprehensive, full-stack network simulation tool designed to visualize and demystify the journey of data through the OSI Model layers.
+A high-fidelity, full-stack network simulation environment designed to model, visualize, and analyze the encapsulation and transmission of data across the OSI (Open Systems Interconnection) reference model.
 
 ---
 
-## ✨ Overview
+## 📖 Introduction
 
-The **OSI Packet Simulator** provides a deep-dive into networking fundamentals. It simulates a multi-hop transmission (Host A → Router → Host B), breaking down every step of the encapsulation and decapsulation process across Layers 1, 2, 3, 4, and 7.
+The **OSI Packet Simulator** is an educational and technical tool that implements a functional network stack from the ground up. It provides a granular view of how data is transformed from a high-level application JSON object into raw physical bits, routed through intermediate nodes (Routers), and reassembled at a destination host.
 
-Whether you're a student learning networking or a developer curious about what happens "under the hood" of a socket, this tool brings the abstract OSI model to life with real-time logs and interactive visualizations.
+This project bridges the gap between theoretical networking concepts and practical implementation, offering a "Wireshark-like" visibility into the automated processes of modern networking.
 
-## 🚀 Key Features
+## 🚀 Key Technical Capabilities
 
-- **🛡️ Full Layered Architecture**: Complete implementation of Layers 1 (Physical) through 7 (Application).
-- **📦 Realistic Encapsulation**: Watch packets get wrapped in headers (TCP/UDP, IP, Ethernet) and fragmented based on MTU.
-- **🔍 Deep Inspection**: View detailed logs of ARP cache lookups, MAC handoffs, and checksum validations.
-- **🛣️ Intelligent Routing**: Simulates Router logic with Default Gateway checks and Layer 3 forwarding.
-- **📊 Live Visualization**: A modern React 19 dashboard with synchronized animations and log streaming.
-- **🧪 Robust Logic**: Handles segmentation, reassembly, and "transmission" delays asynchronously.
+### 🛡️ Layered Stack Implementation
+- **L7 (Application)**: JSON serialization, payload validation, and protocol simulation.
+- **L4 (Transport)**: TCP/UDP-style segmentation, sequence numbering, and checksum calculation.
+- **L3 (Network)**: IP addressing, MTU-based fragmentation, and TTL (Time-To-Live) management.
+- **L2 (Data Link)**: ARP (Address Resolution Protocol) cache simulation and Ethernet framing.
+- **L1 (Physical)**: Bit-stream conversion and asynchronous transmission simulation.
 
-## 🛠️ Tech Stack
+### 🛣️ Advanced Routing & Orchestration
+- **Intelligent Forwarding**: Routers utilize Layer 3 logic to determine next-hop interfaces.
+- **Default Gateway Logic**: Hosts automatically resolve and forward traffic to gateways for off-network communication.
+- **Multi-Hop Simulation**: Full support for complex topologies involving multiple network segments.
 
-### Frontend
-- **Framework**: React 19 (Vite)
-- **Styling**: Tailwind CSS v4 (Modern, utility-first)
-- **Validation**: Zod & React Hook Form
-- **Icons**: Custom SVG system
+### 📊 Modern Observability
+- **Live Log Streaming**: Real-time event tracking of every packet modification.
+- **Synchronized Visuals**: React 19 dashboard providing immediate feedback on simulation status.
+- **Schema Validation**: Robust data integrity ensured via Zod-powered simulation parameters.
 
-### Backend
-- **Runtime**: Node.js & TypeScript
-- **Framework**: Express.js
-- **Testing**: Jest (Unit testing for every layer)
-- **Architecture**: Pure Object-Oriented (NetworkNode, Host, Router classes)
+## 🏗️ System Architecture
 
-## 🏗️ How It Works
-
-The simulator follows a strict OOP approach to model network behavior:
+The project utilizes a strict Object-Oriented Design (OOD) to mirror real-world hardware components:
 
 ```mermaid
 graph TD
-    subgraph "Host A (Source)"
-        L7A[Layer 7: Application] --> L4A[Layer 4: Transport]
-        L4A --> L3A[Layer 3: Network]
-        L3A --> L2A[Layer 2: Data Link]
-        L2A --> L1A[Layer 1: Physical]
+    subgraph "Host A (192.168.1.2)"
+        L7A[Application Layer] --> L4A[Transport Layer]
+        L4A --> L3A[Network Layer]
+        L3A --> L2A[Data Link Layer]
+        L2A --> L1A[Physical Layer]
     end
 
-    L1A -- "Raw Data" --> R1[Router]
+    L1A -- "Ethernet Frame" --> R1[Router (Default Gateway)]
 
     subgraph "Router"
-        RL1[Layer 1] --> RL2[Layer 2]
-        RL2 --> RL3[Layer 3: IP Routing]
-        RL3 --> RL2_out[Layer 2: New Handoff]
-        RL2_out --> RL1_out[Layer 1]
+        RL1[L1: Physical] --> RL2[L2: MAC Resolution]
+        RL2 --> RL3[L3: IP Forwarding]
+        RL3 --> RL2_out[L2: New MAC Handoff]
+        RL2_out --> RL1_out[L1: Physical]
     end
 
-    RL1_out -- "Raw Data" --> L1B[Host B (Destination)]
+    RL1_out -- "Ethernet Frame" --> L1B[Host B (10.0.0.5)]
 
-    subgraph "Host B (Target)"
+    subgraph "Host B (Destination)"
         L1B --> L2B
         L2B --> L3B
         L3B --> L4B
-        L4B --> L7B[Layer 7: Data Received]
+        L4B --> L7B[Data Reassembled]
     end
+```
+
+### Class Hierarchy
+- **`NetworkNode`**: Base class providing core L1-L3 functionality.
+- **`Host`**: Extends `NetworkNode` with L4-L7 capabilities for end-system simulation.
+- **`Router`**: Specialized `NetworkNode` optimized for L3 packet switching and multi-interface management.
+
+## 🛠️ Project Structure
+
+```text
+├── backend/            # Express.js & TypeScript Simulation Engine
+│   ├── src/core/       # OOP Base Classes (Host, Router, Packet)
+│   ├── src/layers/     # Individual OSI Layer Logic (1-7)
+│   └── __tests__/      # Comprehensive Jest Unit Tests
+├── frontend/           # React 19 & Tailwind CSS v4 Dashboard
+│   ├── src/components/ # Modular UI Components (LogItem, NetworkMap)
+│   └── src/schemas/    # Zod Validation Schemas
+└── docs/               # Technical Documentation & Diagrams
 ```
 
 ## 🚥 Getting Started
 
 ### Prerequisites
-- [Node.js](https://nodejs.org/) (v18+ recommended)
-- [npm](https://www.npmjs.com/)
+- **Node.js**: v18.0.0 or higher
+- **npm**: v9.0.0 or higher
 
-### Installation
+### 1. Installation
+Clone the repository and install dependencies for both services:
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/your-username/osi-packet-simulator.git
-   cd osi-packet-simulator
-   ```
+```bash
+# Clone
+git clone https://github.com/your-username/osi-packet-simulator.git
+cd osi-packet-simulator
 
-2. **Setup Backend:**
-   ```bash
-   cd backend
-   npm install
-   cp .env.example .env
-   npm run dev
-   ```
+# Install Backend
+cd backend && npm install && cd ..
 
-3. **Setup Frontend:**
-   ```bash
-   cd ../frontend
-   npm install
-   npm run dev
-   ```
+# Install Frontend
+cd frontend && npm install && cd ..
+```
 
-4. **Access the App:**
-   Open [http://localhost:5173](http://localhost:5173) in your browser.
+### 2. Configuration
+Create a `.env` file in the `backend/` directory:
+```env
+PORT=3001
+NODE_ENV=development
+```
+
+### 3. Execution
+Run both services in separate terminals:
+
+```bash
+# Terminal 1: Backend
+cd backend && npm run dev
+
+# Terminal 2: Frontend
+cd frontend && npm run dev
+```
+
+Visit `http://localhost:5173` to start simulating.
+
+## 🧪 Quality Assurance
+
+The backend is covered by a suite of unit tests verifying layer-to-layer communication and edge-case handling (e.g., fragmentation, checksum failure).
+
+```bash
+cd backend
+npm test
+```
 
 ## 📅 Roadmap
 
-- [ ] **Phase 1**: "Wireshark" style packet inspection (Deep header snapshots).
-- [ ] **Phase 2**: Network Chaos (Latency simulation, TTL expiration, and Bit-flipping).
-- [ ] **Phase 3**: Dynamic Topology Builder (Drag-and-drop network design).
-- [ ] **Phase 4**: Real-time WebSockets for log streaming.
+- **Q2 2026**: Implementation of "Wireshark" deep-packet inspection (Header snapshots).
+- **Q3 2026**: Network Chaos Engine (Variable latency, jitter, and packet drop simulation).
+- **Q4 2026**: Interactive Topology Builder (Drag-and-drop node configuration).
 
 ## 📝 License
 
-This project is licensed under the **ISC License**.
+Distributed under the **ISC License**. See `LICENSE` for more information.
 
 ---
 
-Built with ❤️ for the networking community using **Gemini CLI**.
+*Part of a research initiative into visual networking education. Powered by **Gemini CLI**.*
