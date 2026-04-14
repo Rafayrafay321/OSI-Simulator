@@ -36,6 +36,13 @@ A full-stack network simulation tool built to visualize data flow through the OS
 
 ## 📅 Roadmap / Next Steps
 
+### 🌐 Phase 5: The Landing Page (ACTIVE)
+- [ ] **Design System Extension**: Establish color, typography, and spacing tailored for an engaging landing page.
+- [ ] **Hero Section**: Strong value proposition, animated networking visual, and a Call to Action (CTA) leading to the Simulator.
+- [ ] **Features Section**: Highlight deep inspection, physical node emulation, and chaos engineering.
+- [ ] **Technical Architecture Section**: Display the AWS/Vercel/Node/React stack diagram.
+- [ ] **Responsive Navigation & Footer**: Setup routing (Home vs. Simulator).
+
 ### Phase 1: Deep Inspection (The "Wireshark" Experience)
 - [ ] **Backend Enhancements**:
     - [ ] Update `LogEntry` interface to accept an optional `packetSnapshot` object.
@@ -55,7 +62,7 @@ A full-stack network simulation tool built to visualize data flow through the OS
 - [ ] **Dynamic Orchestration**: Refactor the backend to instantiate the `Orchestrator` based on an arbitrary JSON topology map rather than a hardcoded `Host -> Router -> Host` chain.
 - [ ] **Multiple Interfaces**: Update the `Router` class to support multiple physical interfaces and a proper Routing Table.
 
-### 🚀 Production Deployment Plan (Zero-Cost AWS Architecture)
+### 🚀 Production Deployment Plan (Zero-Cost AWS Architecture) - [COMPLETED]
 
 **Architecture Blueprint:**
 - **Code Repository & CI/CD:** GitHub + GitHub Actions (Free)
@@ -66,24 +73,31 @@ A full-stack network simulation tool built to visualize data flow through the OS
 - **DNS Management:** Cloudflare or GitHub Student Developer Pack Domain.
 
 **Execution Phases:**
-- [ ] **Phase 1: Foundation & Safety**
-    - [ ] Push codebase to a private GitHub repository.
-    - [ ] Create an AWS account (or use AWS Educate/Academy).
-    - [ ] **CRITICAL:** Set up an AWS Billing Alarm (Zero Spend Budget) to prevent accidental charges.
-- [ ] **Phase 2: Backend Server Setup**
-    - [ ] Launch an Ubuntu EC2 instance (`t2.micro`, Free Tier eligible).
-    - [ ] Configure Security Groups (Allow SSH:22 from own IP, HTTP:80, HTTPS:443).
-    - [ ] SSH into the server, install Node.js via `nvm`, and clone the repository.
-    - [ ] Build the TypeScript backend and start the process using `pm2`.
-- [ ] **Phase 3: Reverse Proxy & Security**
-    - [ ] Install and configure NGINX to reverse proxy port 80 traffic to `localhost:3001`.
-    - [ ] (Optional) Point a custom student domain to the EC2 Public IP.
-    - [ ] Install Certbot and generate a free SSL certificate for HTTPS.
-- [ ] **Phase 4: Frontend CDN Deployment**
-    - [ ] Update frontend API calls to use environment variables (`import.meta.env.VITE_API_URL`).
-    - [ ] Connect the GitHub repository to AWS Amplify (or Vercel).
-    - [ ] Configure build settings and set production environment variables.
-    - [ ] Trigger the initial automated deployment.
+- [x] **Phase 1: Foundation & Safety**
+    - [x] Push codebase to a private GitHub repository.
+    - [x] Create an AWS account (or use AWS Educate/Academy).
+    - [x] **CRITICAL:** Set up an AWS Billing Alarm (Zero Spend Budget) to prevent accidental charges.
+- [x] **Phase 2: Backend Server Setup**
+    - [x] Launch an Ubuntu EC2 instance (`t2.micro`, Free Tier eligible).
+    - [x] Configure Security Groups (Allow SSH:22 from own IP, HTTP:80, HTTPS:443).
+    - [x] SSH into the server, install Node.js via `nvm`, and clone the repository.
+    - [x] Build the TypeScript backend and start the process using `pm2`.
+- [x] **Phase 3: Reverse Proxy & Security**
+    - [x] Install and configure NGINX to reverse proxy port 80 traffic to `localhost:3001`.
+    - [x] (Optional) Point a custom student domain to the EC2 Public IP.
+    - [x] Install Certbot and generate a free SSL certificate for HTTPS.
+- [x] **Phase 4: Frontend CDN Deployment**
+    - [x] Update frontend API calls to use environment variables (`import.meta.env.VITE_API_URL`).
+    - [x] Connect the GitHub repository to AWS Amplify (or Vercel).
+    - [x] Configure build settings and set production environment variables.
+    - [x] Trigger the initial automated deployment.
+
+### 🌐 Phase 5: The Landing Page (Current Objective)
+- [ ] **Design System Extension**: Establish color, typography, and spacing tailored for an engaging landing page.
+- [ ] **Hero Section**: Strong value proposition, animated networking visual, and a Call to Action (CTA) leading to the Simulator.
+- [ ] **Features Section**: Highlight deep inspection, physical node emulation, and chaos engineering.
+- [ ] **Technical Architecture Section**: Display the AWS/Vercel/Node/React stack diagram.
+- [ ] **Responsive Navigation & Footer**: Setup routing (Home vs. Simulator).
 
 ### Infrastructure & QA
 - [ ] **WebSockets**: Replace REST polling with real-time socket streams for live logs.

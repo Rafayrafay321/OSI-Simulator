@@ -1,8 +1,8 @@
-import { SimulationContainer } from './components/simulationPage';
+import LandingPage from './components/LandingPage';
 import './App.css';
 
 function App() {
-  return <SimulationContainer />;
+  return <LandingPage />;
 }
 
 export default App;
