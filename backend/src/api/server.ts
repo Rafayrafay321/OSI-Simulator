@@ -1,6 +1,7 @@
 // Node Imports
 import * as http from 'node:http';
 import WebSocket from 'ws';
+import crypto from 'node:crypto';
 
 // Custom Imports
 import app from '../app';
@@ -10,19 +11,19 @@ const PORT = env.PORT || 3001;
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
+export const activeClients = new Map<string, WebSocket>();
+
 wss.on('connection', (ws) => {
   console.log('Client connected');
 
-  ws.send('Welcome to PacketForge!');
+  const socketId = crypto.randomUUID();
+  activeClients.set(socketId, ws);
 
-  ws.on('message', (message) => {
-    console.log(`Received message: ${message}`);
-
-    ws.send('Hello from server');
-  });
+  ws.send(JSON.stringify({ type: 'Connected', socketId: socketId }));
 
   ws.on('close', () => {
     console.log('Client disconnected');
+    activeClients.delete(socketId);
   });
 });
 

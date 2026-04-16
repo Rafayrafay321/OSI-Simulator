@@ -1,7 +1,8 @@
+import EventEmitter from 'node:events';
 // Types
 import { LayerLevel, LogEntry, LogLevel } from '../types';
 
-export class Logger {
+export class Logger extends EventEmitter {
   private logs: LogEntry[] = [];
 
   public log(
@@ -19,6 +20,7 @@ export class Logger {
     };
 
     this.logs.push(entry);
+    this.emit('Packet Dispatched', entry);
     console.log(
       `[${entry.timestamp}] [${entry.layer}] [${entry.type}] ${entry.message}`,
     );
