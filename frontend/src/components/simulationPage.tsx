@@ -12,6 +12,7 @@ import {
   simulationConfigSchema,
   type FormSchemaType,
 } from '../schemas/simulationSchema';
+import { ServerOff } from 'lucide-react';
 
 export const SimulationContainer = () => {
   const [formData, setFormData] = useState<FormSchemaType>({
@@ -33,6 +34,28 @@ export const SimulationContainer = () => {
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [layerFilter, setLayerFilter] = useState<string>('All Layers');
   const [statusFilter, setStatusFilter] = useState<string>('All Status');
+
+  useEffect(() => {
+
+    const socket = new WebSocket(import.meta.env.VITE_WSS_API_URL as string);
+
+    socket.addEventListener('message', (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        console.log(data)
+        setSimulationLogs((prev) => [...prev, data])
+      } catch (error) {
+        console.log('failed to Parse the data')
+      }
+    })
+
+    return () => {
+      if (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING) {
+        socket.close();
+      }
+    }
+
+  }, []);
 
   useEffect(() => {
     if (simulationLogs.length > 0) {
