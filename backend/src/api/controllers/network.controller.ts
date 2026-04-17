@@ -1,19 +1,30 @@
 import { Request, Response, NextFunction } from 'express';
 
+import { activeClients } from '../server';
+
 // Custom Imports
 import { Orchestrator } from '../../core/orchestrator';
 import { AppError } from '../utils/AppError';
 
 // Types
-import type { simulationConfig } from '../../types';
+import type { LogEntry, simulationConfig } from '../../types';
 
 export const send = async (req: Request, res: Response, next: NextFunction) => {
-  const config = req.body as simulationConfig;
+  const { config, socketId } = req.body;
 
-  if (!config) {
+  if (!config || !socketId) {
+    return next(new AppError(400, 'Bad Request.'));
+  }
+  const clienSocket = activeClients.get(socketId);
+
+  if (!clienSocket) {
     return next(new AppError(400, 'Bad Request.'));
   }
   const simulation = new Orchestrator(config);
+  simulation.logger.on('Packet Dispatched', (data: LogEntry) => {
+    clienSocket.send(JSON.stringify(data));
+  });
+
   try {
     const response = await simulation.runSimulation(config);
 

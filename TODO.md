@@ -1,10 +1,10 @@
 # OSI Packet Simulator - Enterprise Upgrade TODO
 
 ## 1. Real-Time Telemetry via WebSockets (Streaming Simulation)
-- [ ] Install and configure Socket.io or WS in the Express backend.
-- [ ] Refactor internal components (Logger/NetworkStack) to use a Node.js `EventEmitter`.
-- [ ] Broadcast packet transitions in real-time as they happen.
-- [ ] Update frontend to consume WebSocket streams instead of waiting for a single REST response.
+- [x] Install and configure Socket.io or WS in the Express backend.
+- [x] Refactor internal components (Logger/NetworkStack) to use a Node.js `EventEmitter`.
+- [x] Broadcast packet transitions in real-time as they happen.
+- [x] Update frontend to consume WebSocket streams instead of waiting for a single REST response.
 
 ## 2. Dynamic, Stateful Network Topologies (Graph Structures)
 - [ ] Introduce a Topology Manager in the core engine.

@@ -160,3 +160,5 @@ export interface HostConfig extends NodeConfig {
 }
 
 export interface RouterConfig extends NodeConfig {}
+
+export type Devices = Host | Router;

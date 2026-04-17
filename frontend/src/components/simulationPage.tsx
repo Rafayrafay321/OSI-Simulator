@@ -12,7 +12,7 @@ import {
   simulationConfigSchema,
   type FormSchemaType,
 } from '../schemas/simulationSchema';
-import { ServerOff } from 'lucide-react';
+
 
 export const SimulationContainer = () => {
   const [formData, setFormData] = useState<FormSchemaType>({
@@ -34,6 +34,7 @@ export const SimulationContainer = () => {
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [layerFilter, setLayerFilter] = useState<string>('All Layers');
   const [statusFilter, setStatusFilter] = useState<string>('All Status');
+  const [socketId, setSocketId] = useState<string>('');
 
   useEffect(() => {
 
@@ -42,8 +43,11 @@ export const SimulationContainer = () => {
     socket.addEventListener('message', (event) => {
       try {
         const data = JSON.parse(event.data);
-        console.log(data)
-        setSimulationLogs((prev) => [...prev, data])
+        if (data.type === 'connected') {
+          setSocketId(data.socketId);
+        } else {
+          setSimulationLogs((prev) => [...prev, data])
+        }
       } catch (error) {
         console.log('failed to Parse the data')
       }
@@ -127,7 +131,7 @@ export const SimulationContainer = () => {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/send`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ config: formData, socketId }),
       });
 
       const data = await response.json();
