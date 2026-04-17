@@ -1,28 +1,36 @@
 import { Request, Response, NextFunction } from 'express';
 
 import { activeClients } from '../server';
+import { activeToplogies } from './topology.controller';
 
 // Custom Imports
 import { Orchestrator } from '../../core/orchestrator';
 import { AppError } from '../utils/AppError';
 
 // Types
-import type { LogEntry, simulationConfig } from '../../types';
+import type { LogEntry } from '../../types';
 
 export const send = async (req: Request, res: Response, next: NextFunction) => {
-  const { config, socketId } = req.body;
+  const { config, socketId, topologyId } = req.body;
 
-  if (!config || !socketId) {
+  if (!config || !socketId || topologyId) {
     return next(new AppError(400, 'Bad Request.'));
   }
-  const clienSocket = activeClients.get(socketId);
+  const currentClienSocket = activeClients.get(socketId);
 
-  if (!clienSocket) {
-    return next(new AppError(400, 'Bad Request.'));
+  if (!currentClienSocket) {
+    return next(new AppError(404, 'Socket Connection Not Found'));
   }
-  const simulation = new Orchestrator(config);
+
+  const currentTopology = activeToplogies.get(topologyId);
+
+  if (!currentTopology) {
+    return next(new AppError(404, 'Socket Connection Not Found'));
+  }
+
+  const simulation = new Orchestrator(config, currentTopology);
   simulation.logger.on('Packet Dispatched', (data: LogEntry) => {
-    clienSocket.send(JSON.stringify(data));
+    currentClienSocket.send(JSON.stringify(data));
   });
 
   try {

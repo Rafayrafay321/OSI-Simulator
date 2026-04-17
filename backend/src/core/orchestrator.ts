@@ -1,6 +1,9 @@
 import { Host } from './Host';
 import { Router } from './Router';
 import { Logger } from './Logger';
+import { TopologyGraph } from './TopologyGraph';
+
+// Types
 import {
   LayerLevel,
   LogLevel,
@@ -16,7 +19,7 @@ export class Orchestrator {
   public logger: Logger;
   private arpCache: Map<string, string>;
 
-  constructor(config: simulationConfig) {
+  constructor(config: simulationConfig, topologyGraph: TopologyGraph) {
     this.logger = new Logger();
     this.arpCache = new Map<string, string>();
 
