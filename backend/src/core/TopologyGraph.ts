@@ -1,20 +1,40 @@
-export class TopologyGraph {
-  private adjajencyList: Map<string, Set<string>> = new Map();
+import { TopologyNode } from '../types';
 
-  public addNode(nodeId: string) {
-    if (!this.adjajencyList.has(nodeId)) {
-      this.adjajencyList.set(nodeId, new Set());
+export class TopologyGraph {
+  private adjaencyList: Map<string, Set<string>> = new Map();
+  private nodeRegistry: Map<string, TopologyNode> = new Map();
+
+  public addNode(node: TopologyNode) {
+    this.nodeRegistry.set(node.id, node);
+    if (!this.adjaencyList.has(node.id)) {
+      this.adjaencyList.set(node.id, new Set());
     }
   }
 
-  public addEdge(nodeAId: string, nodeBId: string) {
-    this.addNode(nodeAId);
-    this.addNode(nodeBId);
+  public addEdge(nodeA: TopologyNode, nodeB: TopologyNode) {
+    this.addNode(nodeA);
+    this.addNode(nodeB);
 
-    const nodeAList = this.adjajencyList.get(nodeAId)!;
-    const nodeBList = this.adjajencyList.get(nodeBId)!;
+    const nodeAList = this.adjaencyList.get(nodeA.id)!;
+    const nodeBList = this.adjaencyList.get(nodeB.id)!;
 
-    nodeAList.add(nodeBId);
-    nodeBList.add(nodeAId);
+    nodeAList.add(nodeB.id);
+    nodeBList.add(nodeA.id);
+  }
+
+  public getNode(nodeId: string) {
+    return this.nodeRegistry.get(nodeId);
+  }
+
+  public getEdges(nodeId: string): Set<string> {
+    return this.adjaencyList.get(nodeId) || new Set();
+  }
+
+  public getAllEdges() {
+    return this.adjaencyList.values();
+  }
+
+  public getAllNodes() {
+    return this.nodeRegistry.values();
   }
 }

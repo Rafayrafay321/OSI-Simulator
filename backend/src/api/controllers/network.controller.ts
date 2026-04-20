@@ -13,7 +13,7 @@ import type { LogEntry } from '../../types';
 export const send = async (req: Request, res: Response, next: NextFunction) => {
   const { config, socketId, topologyId } = req.body;
 
-  if (!config || !socketId || topologyId) {
+  if (!config || !socketId || !topologyId) {
     return next(new AppError(400, 'Bad Request.'));
   }
   const currentClienSocket = activeClients.get(socketId);

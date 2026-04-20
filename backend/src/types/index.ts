@@ -128,6 +128,12 @@ export interface Router {
   dataLinkLayer: DataLinkLayer;
   physicalLayer: PhysicalLayer;
 }
+
+export interface Switch {
+  dataLinkLayer: DataLinkLayer;
+  physicalLayer: PhysicalLayer;
+}
+
 export type LayerData =
   | ApplicationLayerData
   | TransportLayerData
@@ -161,4 +167,16 @@ export interface HostConfig extends NodeConfig {
 
 export interface RouterConfig extends NodeConfig {}
 
-export type Devices = Host | Router;
+export interface SwitchConfig extends NodeConfig {
+  portCount: number;
+  macTable: Map<string, number>;
+}
+
+export type Devices = Host | Router | Switch;
+
+export interface TopologyNode {
+  id: string;
+  type: 'Host' | 'Router' | 'Switch';
+  ip?: string;
+  mac?: string;
+}

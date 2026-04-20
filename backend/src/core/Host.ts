@@ -64,7 +64,7 @@ export class Host extends NetworkNode {
     this.networkStack.sendData(packet);
   }
 
-  public onReceipt(packet: BasePacket) {
+  public receivePacket(packet: BasePacket) {
     const recivedPacket = this.networkStack.receiveData(packet);
     if (!recivedPacket) {
       return;

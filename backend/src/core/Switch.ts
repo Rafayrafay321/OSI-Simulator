@@ -1,27 +1,20 @@
-// Custom imports
 import { NetworkNode } from './NetworkNode';
 import { Logger } from './Logger';
 import { BasePacket } from './Packet';
 
 // Types
-import type { RouterConfig } from '../types';
-export class Router extends NetworkNode {
-  //   private routingTable: Map<string, string>;
+import { SwitchConfig } from '../types';
+
+export class Switch extends NetworkNode {
   constructor(
     name: string,
-    config: RouterConfig,
+    config: SwitchConfig,
     logger: Logger,
     arpCache: Map<string, string>,
   ) {
     super(name, config, logger, arpCache);
   }
 
-  /**
-   * The core logic of a Router:
-   * 1. Receive data "Up" the stack (Physical -> Data Link -> Network).
-   * 2. Since only L1-L3 are registered, the stack stops at L3.
-   * 3. Send data "Down" the stack (Network -> Data Link -> Physical).
-   */
   public receivePacket(incomingPacket: BasePacket): void {
     const receivedPacket = this.networkStack.receiveData(incomingPacket);
 

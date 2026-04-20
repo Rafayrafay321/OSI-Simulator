@@ -1,5 +1,6 @@
 import { Host } from './Host';
 import { Router } from './Router';
+import { Switch } from './Switch';
 import { Logger } from './Logger';
 import { TopologyGraph } from './TopologyGraph';
 
@@ -13,55 +14,72 @@ import {
 } from '../types';
 
 export class Orchestrator {
-  public hostA: Host;
-  public hostB: Host;
-  public router: Router;
-  public logger: Logger;
-  private arpCache: Map<string, string>;
+  public logger: Logger = new Logger();
+  private arpCache: Map<string, string> = new Map();
+  private activeDevices: Map<string, Host | Router | Switch> = new Map();
+  private topologyGraph: TopologyGraph;
 
   constructor(config: simulationConfig, topologyGraph: TopologyGraph) {
-    this.logger = new Logger();
-    this.arpCache = new Map<string, string>();
+    this.topologyGraph = topologyGraph;
 
-    const routerIp = '192.168.1.1';
-    const routerMac = '00:00:5E:00:53:AA';
+    const switchMac = '00:00:5E:00:53:AB';
 
-    const hostAConfig: HostConfig = {
+    const routerConfig = {
+      ipAddress: '192.168.1.1',
+      macAddress: '00:00:5E:00:53:AA',
+    };
+
+    const hostConfig: HostConfig = {
       ipAddress: config.srcIp,
       macAddress: 'AA:AA:AA:AA:AA:AA',
-      defaultGateway: routerIp,
+      defaultGateway: routerConfig.ipAddress,
       srcPort: config.srcPort,
       srcProtocol: config.appProtocol,
       srcMethod: config.appMethod,
       dropChance: config.dropChance,
     };
-    this.hostA = new Host('HostA', hostAConfig, this.logger, this.arpCache);
 
-    const hostBConfig: HostConfig = {
-      ipAddress: config.destIp,
-      macAddress: 'BB:BB:BB:BB:BB:BB',
-      defaultGateway: routerIp,
-      srcPort: config.destPort,
-      srcProtocol: config.appProtocol,
-      srcMethod: config.appMethod,
+    // TODO: Configure the switch configs
+    const switchConfig = {
+      ipAddress: '192.168.1.1',
+      macAddress: '00:1A:2B:3C:4D:5E',
+      defaultGateway: '192.168.1.254',
+      dropChance: 0.01,
+      portCount: 24,
+      macTable: new Map([
+        ['AA:BB:CC:DD:EE:01', 1],
+        ['AA:BB:CC:DD:EE:02', 2],
+        ['AA:BB:CC:DD:EE:03', 3],
+      ]),
     };
-    this.hostB = new Host('HostB', hostBConfig, this.logger, this.arpCache);
 
-    const routerConfig = {
-      ipAddress: routerIp,
-      macAddress: routerMac,
-    };
-    this.router = new Router(
-      'RouterA',
-      routerConfig,
-      this.logger,
-      this.arpCache,
-    );
+    const nodesToBuild = topologyGraph.getAllNodes();
 
-    this.arpCache.set(routerIp, routerMac);
-    this.arpCache.set(config.destIp, hostBConfig.macAddress);
+    for (let node of nodesToBuild) {
+      switch (node.type) {
+        case 'Host':
+          this.activeDevices.set(
+            node.id,
+            new Host(node.id, hostConfig, this.logger, this.arpCache),
+          );
+          break;
+
+        case 'Router':
+          this.activeDevices.set(
+            node.id,
+            new Router(node.id, routerConfig, this.logger, this.arpCache),
+          );
+          break;
+
+        case 'Switch':
+          this.activeDevices.set(
+            node.id,
+            new Switch(node.id, switchConfig, this.logger, this.arpCache),
+          );
+          break;
+      }
+    }
   }
-
   private connectPhysicalLayers(
     onComplete: (data: {
       finalPayload: string | null;
@@ -69,56 +87,24 @@ export class Orchestrator {
       packetSize: number | null;
     }) => void,
   ) {
-    this.hostA.physicalLayer.onDataTransmit = (packet) => {
-      this.logger.log(
-        LayerLevel.PHYSICAL,
-        `Transmission: HostA -> RouterA`,
-        LogLevel.INFO,
-      );
-      this.router.forwardPacket(packet.clone());
-    };
-
-    this.router.physicalLayer.onDataTransmit = (packet) => {
-      this.logger.log(
-        LayerLevel.PHYSICAL,
-        `Transmission: RouterA -> HostB`,
-        LogLevel.INFO,
-      );
-      const finalPacket = this.hostB.onReceipt(packet.clone());
-
-      if (finalPacket) {
-        this.logger.log(
-          LayerLevel.APPLICATION,
-          'Host B received final payload',
-          LogLevel.SUCCESS,
-        );
-        onComplete({
-          finalPayload: finalPacket.getPayload(),
-          logs: this.logger.getLogs(),
-          packetSize: finalPacket.getPacketSize(finalPacket),
-        });
-      } else {
-        // If we don't get a final packet, it might be buffered (fragmentation) or dropped internally.
-        // Since fragments are processed synchronously, we can use a setTimeout to resolve if it truly hangs,
-        // but for now we'll rely on onDataDroped or the final fragment to resolve.
-        // We will NOT call onComplete here for null packets to avoid ending the simulation during fragmentation.
-      }
-    };
-
-    this.hostA.physicalLayer.onDataDroped = () => {
-      onComplete({
-        finalPayload: null,
-        logs: this.logger.getLogs(),
-        packetSize: null,
-      });
-    };
-    this.router.physicalLayer.onDataDroped = () => {
-      onComplete({
-        finalPayload: null,
-        logs: this.logger.getLogs(),
-        packetSize: null,
-      });
-    };
+    this.activeDevices.forEach((device, nodeId) => {
+      device.physicalLayer.onDataTransmit = (packet) => {
+        const neighborIds = this.topologyGraph.getEdges(nodeId);
+        for (let neighborId of neighborIds) {
+          const targetDevice = this.activeDevices.get(neighborId);
+          if (targetDevice) {
+            const receivedPacket = targetDevice.receivePacket(packet.clone());
+            if (receivedPacket) {
+              onComplete({
+                finalPayload: receivedPacket.getPayload(),
+                logs: this.logger.getLogs(),
+                packetSize: receivedPacket.getPacketSize(receivedPacket),
+              });
+            }
+          }
+        }
+      };
+    });
   }
 
   public async runSimulation(config: simulationConfig): Promise<{
@@ -126,13 +112,31 @@ export class Orchestrator {
     logs: LogEntry[];
     packetSize: number | null;
   }> {
-    this.logger.clearLogs();
-
     return new Promise((resolve) => {
       this.connectPhysicalLayers(resolve);
 
       console.log(`[Orchestrator] Starting simulation with Default Gateway...`);
-      this.hostA.initiateTransmission(config);
+      let senderId: string | null = null;
+
+      for (const node of this.topologyGraph.getAllNodes()) {
+        if (node.ip === config.srcIp) {
+          senderId = node.id;
+          break;
+        }
+      }
+      if (senderId) {
+        const senderDevice = this.activeDevices.get(senderId);
+
+        if (senderDevice instanceof Host) {
+          senderDevice.initiateTransmission(config);
+        }
+      } else {
+        this.logger.log(
+          LayerLevel.APPLICATION,
+          'Could not find a Host matching the source IP!',
+          LogLevel.ERROR,
+        );
+      }
     });
   }
 }

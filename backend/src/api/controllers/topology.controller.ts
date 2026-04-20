@@ -3,6 +3,7 @@ import crypto from 'node:crypto';
 
 // Custom Imports
 import { TopologyGraph } from '../../core/TopologyGraph';
+import { TopologyNode } from '../../types';
 import { AppError } from '../utils/AppError';
 
 export const activeToplogies = new Map<string, TopologyGraph>();
@@ -21,11 +22,11 @@ export const createTopology = (
 
     const graph = new TopologyGraph();
 
-    nodes.forEach((nodeId: string) => {
-      graph.addNode(nodeId);
+    nodes.forEach((node: TopologyNode) => {
+      graph.addNode(node);
     });
 
-    edges.forEach((edge: [string, string]) => {
+    edges.forEach((edge: [TopologyNode, TopologyNode]) => {
       graph.addEdge(edge[0], edge[1]);
     });
 
