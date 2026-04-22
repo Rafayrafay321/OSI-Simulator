@@ -13,10 +13,12 @@ import {
 } from '../types';
 import { ApplicationLayer } from '../layers/applicationLayer_7';
 import { TransportLayer } from '../layers/transportLayer_4';
+import { NetworkLayer } from '../layers/networkLayer_3';
 
 export class Host extends NetworkNode {
   public applicationLayer: ApplicationLayer;
   public transportLayer: TransportLayer;
+  public networkLayer: NetworkLayer;
 
   constructor(
     name: string,
@@ -46,6 +48,22 @@ export class Host extends NetworkNode {
       logger,
     );
 
+    this.networkLayer = new NetworkLayer(
+      {
+        id: `net-${name}`,
+        srcIp: config.ipAddress,
+        destIp: '0.0.0.0',
+        ttl: 64,
+        protocol: 6,
+        DFflag: 0,
+        MFflag: 0,
+        fragmentOffSet: 0,
+      },
+      logger,
+      undefined,
+    );
+
+    this.networkStack.registerLayer(this.networkLayer);
     this.networkStack.registerLayer(this.transportLayer);
     this.networkStack.registerLayer(this.applicationLayer);
   }
@@ -64,8 +82,8 @@ export class Host extends NetworkNode {
     this.networkStack.sendData(packet);
   }
 
-  public receivePacket(packet: BasePacket) {
-    const recivedPacket = this.networkStack.receiveData(packet);
+  public receivePacket(incomingPacket: BasePacket, incommingPortId: string) {
+    const recivedPacket = this.networkStack.receiveData(incomingPacket);
     if (!recivedPacket) {
       return;
     }

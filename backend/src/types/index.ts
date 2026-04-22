@@ -37,6 +37,7 @@ export interface PacketMetaData {
   sourceIp?: string;
   destinationIp?: string;
   status: PacketStatus;
+  incomingPacketId?: string;
 }
 
 // Interface for Headers in Packet
@@ -68,7 +69,10 @@ export type payloadObject = {
 export interface ILayer {
   name: string;
   level: LayerLevel;
-  handleOutgoing: (packet: BasePacket) => BasePacket | BasePacket[] | null;
+  handleOutgoing: (
+    packet: BasePacket,
+    targetedNodeId?: string,
+  ) => BasePacket | BasePacket[] | null;
   handleIncoming: (
     packet: BasePacket,
     incomingPayload?: string,
@@ -95,7 +99,7 @@ export interface TransportLayerData {
 
 export interface NetworkLayerData {
   id: string;
-  srcIp: string;
+  srcIp?: string;
   destIp: string;
   ttl: number;
   protocol: number;
@@ -105,7 +109,7 @@ export interface NetworkLayerData {
 }
 
 export interface DataLinkLayerOptions {
-  srcMac: string;
+  srcMac?: string;
   etherType: number;
 }
 
@@ -152,8 +156,8 @@ export interface simulationConfig {
 }
 
 export interface NodeConfig {
-  ipAddress: string;
-  macAddress: string;
+  ipAddress?: string;
+  macAddress?: string;
   defaultGateway?: string;
   dropChance?: number;
 }
@@ -162,14 +166,13 @@ export interface HostConfig extends NodeConfig {
   srcPort: number;
   srcProtocol: string;
   srcMethod: string;
-  defaultGateway: string;
 }
 
 export interface RouterConfig extends NodeConfig {}
 
 export interface SwitchConfig extends NodeConfig {
   portCount: number;
-  macTable: Map<string, number>;
+  macTable: Map<string, string>;
 }
 
 export type Devices = Host | Router | Switch;
@@ -178,5 +181,5 @@ export interface TopologyNode {
   id: string;
   type: 'Host' | 'Router' | 'Switch';
   ip?: string;
-  mac?: string;
+  mac: string;
 }

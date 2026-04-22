@@ -5,13 +5,7 @@ import { Logger } from './Logger';
 import { TopologyGraph } from './TopologyGraph';
 
 // Types
-import {
-  LayerLevel,
-  LogLevel,
-  HostConfig,
-  LogEntry,
-  simulationConfig,
-} from '../types';
+import { LayerLevel, LogLevel, LogEntry, simulationConfig } from '../types';
 
 export class Orchestrator {
   public logger: Logger = new Logger();
@@ -22,37 +16,6 @@ export class Orchestrator {
   constructor(config: simulationConfig, topologyGraph: TopologyGraph) {
     this.topologyGraph = topologyGraph;
 
-    const switchMac = '00:00:5E:00:53:AB';
-
-    const routerConfig = {
-      ipAddress: '192.168.1.1',
-      macAddress: '00:00:5E:00:53:AA',
-    };
-
-    const hostConfig: HostConfig = {
-      ipAddress: config.srcIp,
-      macAddress: 'AA:AA:AA:AA:AA:AA',
-      defaultGateway: routerConfig.ipAddress,
-      srcPort: config.srcPort,
-      srcProtocol: config.appProtocol,
-      srcMethod: config.appMethod,
-      dropChance: config.dropChance,
-    };
-
-    // TODO: Configure the switch configs
-    const switchConfig = {
-      ipAddress: '192.168.1.1',
-      macAddress: '00:1A:2B:3C:4D:5E',
-      defaultGateway: '192.168.1.254',
-      dropChance: 0.01,
-      portCount: 24,
-      macTable: new Map([
-        ['AA:BB:CC:DD:EE:01', 1],
-        ['AA:BB:CC:DD:EE:02', 2],
-        ['AA:BB:CC:DD:EE:03', 3],
-      ]),
-    };
-
     const nodesToBuild = topologyGraph.getAllNodes();
 
     for (let node of nodesToBuild) {
@@ -60,21 +23,51 @@ export class Orchestrator {
         case 'Host':
           this.activeDevices.set(
             node.id,
-            new Host(node.id, hostConfig, this.logger, this.arpCache),
+            new Host(
+              node.id,
+              {
+                ipAddress: node.ip,
+                macAddress: node.mac,
+                srcPort: config.srcPort,
+                srcProtocol: config.appProtocol,
+                srcMethod: config.appMethod,
+                dropChance: config.dropChance,
+              },
+              this.logger,
+              this.arpCache,
+            ),
           );
           break;
 
         case 'Router':
           this.activeDevices.set(
             node.id,
-            new Router(node.id, routerConfig, this.logger, this.arpCache),
+            new Router(
+              node.id,
+              {
+                ipAddress: node.ip,
+                macAddress: node.mac,
+                dropChance: config.dropChance,
+              },
+              this.logger,
+              this.arpCache,
+            ),
           );
           break;
 
         case 'Switch':
           this.activeDevices.set(
             node.id,
-            new Switch(node.id, switchConfig, this.logger, this.arpCache),
+            new Switch(
+              node.id,
+              {
+                macAddress: node.mac,
+                macTable: new Map<string, string>(),
+                portCount: 32,
+              },
+              this.logger,
+              this.arpCache,
+            ),
           );
           break;
       }
@@ -88,18 +81,41 @@ export class Orchestrator {
     }) => void,
   ) {
     this.activeDevices.forEach((device, nodeId) => {
-      device.physicalLayer.onDataTransmit = (packet) => {
-        const neighborIds = this.topologyGraph.getEdges(nodeId);
-        for (let neighborId of neighborIds) {
-          const targetDevice = this.activeDevices.get(neighborId);
-          if (targetDevice) {
-            const receivedPacket = targetDevice.receivePacket(packet.clone());
+      device.physicalLayer.onDataTransmit = (packet, targetNodeId) => {
+        if (targetNodeId) {
+          const targetedNeighbor = this.activeDevices.get(targetNodeId);
+          if (targetedNeighbor) {
+            const receivedPacket = targetedNeighbor.receivePacket(
+              packet.clone(),
+              nodeId,
+            );
             if (receivedPacket) {
               onComplete({
                 finalPayload: receivedPacket.getPayload(),
                 logs: this.logger.getLogs(),
                 packetSize: receivedPacket.getPacketSize(receivedPacket),
               });
+            }
+          }
+        } else {
+          const neighborIds = this.topologyGraph.getEdges(nodeId);
+          for (let neighborId of neighborIds) {
+            if (neighborId === packet.metadata.incomingPacketId) {
+              continue;
+            }
+            const targetDevice = this.activeDevices.get(neighborId);
+            if (targetDevice) {
+              const receivedPacket = targetDevice.receivePacket(
+                packet.clone(),
+                nodeId,
+              );
+              if (receivedPacket) {
+                onComplete({
+                  finalPayload: receivedPacket.getPayload(),
+                  logs: this.logger.getLogs(),
+                  packetSize: receivedPacket.getPacketSize(receivedPacket),
+                });
+              }
             }
           }
         }

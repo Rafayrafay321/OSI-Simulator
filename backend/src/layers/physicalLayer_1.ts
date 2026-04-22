@@ -8,7 +8,7 @@ export class PhysicalLayer implements ILayer {
   private logger: Logger;
   private dropChance?: number | undefined;
 
-  public onDataTransmit?: (packet: BasePacket) => void;
+  public onDataTransmit?: (packet: BasePacket, targetNodeId?: string) => void;
   public onDataDroped?: () => void;
 
   constructor(logger: Logger, dropChance?: number | undefined) {
@@ -21,7 +21,10 @@ export class PhysicalLayer implements ILayer {
     return JSON.stringify(packet);
   }
 
-  public handleOutgoing(packet: BasePacket): BasePacket | null {
+  public handleOutgoing(
+    packet: BasePacket,
+    targetedNodeId?: string,
+  ): BasePacket | null {
     if (typeof packet.payload !== 'string') {
       const errorMsg = 'Payload must be a string.';
       this.logger.log(LayerLevel.PHYSICAL, errorMsg, LogLevel.ERROR);
@@ -48,7 +51,7 @@ export class PhysicalLayer implements ILayer {
     }
 
     if (this.onDataTransmit) {
-      this.onDataTransmit(packet);
+      this.onDataTransmit(packet, targetedNodeId);
     }
 
     return null;

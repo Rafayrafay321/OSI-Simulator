@@ -41,13 +41,14 @@ export class NetworkStack {
     packet: BasePacket,
     layerIndex: number,
     layer: ILayer[],
+    targetedNodeId?: string,
   ): void {
     if (layerIndex >= layer.length) {
       return;
     }
     let currentLayer = layer[layerIndex];
 
-    const result = currentLayer.handleOutgoing(packet);
+    const result = currentLayer.handleOutgoing(packet, targetedNodeId);
 
     if (!result) return;
 
@@ -60,7 +61,7 @@ export class NetworkStack {
     }
   }
 
-  public sendData(packet: BasePacket) {
+  public sendData(packet: BasePacket, targetedNodeId?: string) {
     const layerWeights: Partial<Record<LayerLevel, number>> = {
       [LayerLevel.APPLICATION]: 7,
       [LayerLevel.TRANSPORT]: 4,
@@ -72,7 +73,7 @@ export class NetworkStack {
     const allSortedLayers = Array.from(this.layers.values()).sort(
       (a, b) => (layerWeights[b.level] || 0) - (layerWeights[a.level] || 0),
     );
-    this.recursiveSend(packet, 0, allSortedLayers);
+    this.recursiveSend(packet, 0, allSortedLayers, targetedNodeId);
   }
 
   public receiveData(packet: BasePacket): BasePacket | null {
