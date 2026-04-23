@@ -17,8 +17,9 @@ export abstract class NetworkNode {
     this.physicalLayer = new PhysicalLayer(logger);
 
     this.dataLinkLayer = new DataLinkLayer(
-      { srcMac: config.macAddress!, etherType: 123 },
+      { srcMac: config.macAddress!, srcIp: config.ipAddress!, etherType: 123 },
       logger,
+      this.networkStack,
       config.defaultGateway,
     );
 

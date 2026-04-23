@@ -110,6 +110,7 @@ export interface NetworkLayerData {
 
 export interface DataLinkLayerOptions {
   srcMac: string;
+  srcIp: string;
   etherType: number;
 }
 

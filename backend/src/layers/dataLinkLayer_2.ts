@@ -11,26 +11,32 @@ import {
   LogLevel,
 } from '../types';
 import { BasePacket } from '../core/Packet';
+import { NetworkStack } from '../core/NetworkStack';
 
 export class DataLinkLayer implements ILayer {
   public name = 'Data Link Layer';
   public level = LayerLevel.DATA_LINK;
   public srcMac: string;
+  public srcIp: string;
   public etherType: number;
   private arpTable: Map<string, string> = new Map();
   private packetBuffer: Map<string, BasePacket[]> = new Map();
   private logger: Logger;
   private defaultGateway?: string;
+  public networkStack: NetworkStack;
 
   constructor(
     options: DataLinkLayerOptions,
     logger: Logger,
+    networkStack: NetworkStack,
     defaultGateway?: string,
   ) {
     this.srcMac = options.srcMac;
+    this.srcIp = options.srcIp;
     this.etherType = options.etherType;
     this.logger = logger;
     this.defaultGateway = defaultGateway;
+    this.networkStack = networkStack;
   }
 
   private calCheckSum(
@@ -93,17 +99,18 @@ export class DataLinkLayer implements ILayer {
 
       const checkSum = this.calCheckSum(
         { srcMac: this.srcMac, etherType: this.etherType },
-        'FF:FF:FF:FF:FF:FF',
+        env.BOARDCAST_MAC_ADD as string,
         arpRequest.payload!,
         arpRequest,
       );
 
       arpRequest.addHeader(LayerLevel.DATA_LINK, {
         srcMac: this.srcMac,
-        destMac: 'FF:FF:FF:FF:FF:FF',
+        destMac: env.BOARDCAST_MAC_ADD as string,
         etherType: this.etherType,
         trailer: checkSum,
       });
+
       return arpRequest;
     }
 
@@ -157,8 +164,7 @@ export class DataLinkLayer implements ILayer {
       );
       throw new Error('Incoming Payload can not be empty');
     }
-    const DataLinkLayerRawHeaders = packet.getHeader();
-    const DataLinkLayerHeaders = DataLinkLayerRawHeaders as DataLinkLayerData;
+    const DataLinkLayerHeaders = packet.getHeader() as DataLinkLayerData;
     const incommingCheckSum = DataLinkLayerHeaders.trailer;
 
     if (incommingCheckSum === undefined || isNaN(incommingCheckSum)) {
@@ -181,34 +187,103 @@ export class DataLinkLayer implements ILayer {
         LogLevel.INFO,
       );
       return null;
-    } else if (DataLinkLayerHeaders.destMac === BROADCAST_MAC_ADDRESS) {
+    } else if (incommingPaylaod.startsWith('Any one has this ip:')) {
+      const ipToCheck = incommingPaylaod.split(':')[1].trim();
+
+      if (ipToCheck === this.srcIp) {
+        const arpReply = new BasePacket();
+        arpReply.setPayload(
+          `I have this IP: ${ipToCheck}, My MAC is: ${this.srcMac}`,
+        );
+
+        const checkSum = this.calCheckSum(
+          { srcMac: this.srcMac, etherType: this.etherType },
+          DataLinkLayerHeaders.srcMac,
+          arpReply.payload!,
+          arpReply,
+        );
+
+        arpReply.addHeader(LayerLevel.DATA_LINK, {
+          srcMac: this.srcMac,
+          destMac: DataLinkLayerHeaders.srcMac,
+          etherType: this.etherType,
+          trailer: checkSum,
+        });
+        
+        arpReply.metadata.currentLayer = LayerLevel.PHYSICAL;
+        this.networkStack.routeOutgoing(arpReply);
+        return null;
+      }
+
       this.logger.log(
         LayerLevel.DATA_LINK,
         'BoardCasting: As it is meant for boardCasting',
         LogLevel.INFO,
       );
-    }
-    const checkSum = this.calCheckSum(
-      {
-        srcMac: DataLinkLayerHeaders.srcMac,
-        etherType: DataLinkLayerHeaders.etherType,
-      },
-      DataLinkLayerHeaders.destMac,
-      incommingPaylaod,
-      packet,
-    );
+    } else if (incommingPaylaod.startsWith('I have this ip:')) {
+      const pattern = /IP: (.+?), My MAC is: (.+)/;
+      const match = incommingPaylaod.match(pattern);
+      if (match) {
+        const [, incomingIp, incomingMac] = match;
+        this.arpTable.set(incomingIp, incomingMac);
 
-    // Verify CheckSum
-    if (checkSum !== incommingCheckSum) {
-      this.logger.log(
-        LayerLevel.DATA_LINK,
-        'CheckSum Failed. Cant proceed Further.',
-        LogLevel.ERROR,
+        if (this.packetBuffer.has(incomingIp)) {
+          const waitingPacketList = this.packetBuffer.get(incomingIp);
+
+          if (waitingPacketList === undefined) {
+            return null;
+          }
+
+          for (const packet of waitingPacketList) {
+            const checkSum = this.calCheckSum(
+              {
+                srcMac: this.srcMac,
+                etherType: this.etherType,
+              },
+              incomingMac,
+              packet.payload!,
+              packet,
+            );
+
+            packet.addHeader(LayerLevel.DATA_LINK, {
+              srcMac: this.srcMac,
+              destMac: incomingMac,
+              etherType: this.etherType,
+              trailer: checkSum,
+            });
+
+            packet.metadata.currentLayer = LayerLevel.PHYSICAL;
+            this.networkStack.routeOutgoing(packet);
+          }
+        }
+        return null;
+      }
+    } else {
+      const checkSum = this.calCheckSum(
+        {
+          srcMac: DataLinkLayerHeaders.srcMac,
+          etherType: DataLinkLayerHeaders.etherType,
+        },
+        DataLinkLayerHeaders.destMac,
+        incommingPaylaod,
+        packet,
       );
-      return null;
+
+      // Verify CheckSum
+      if (checkSum !== incommingCheckSum) {
+        this.logger.log(
+          LayerLevel.DATA_LINK,
+          'CheckSum Failed. Cant proceed Further.',
+          LogLevel.ERROR,
+        );
+        return null;
+      }
+      // Remove DataLink headers
+      packet.removeHeader();
+      return packet;
     }
-    // Remove DataLink headers
-    packet.removeHeader();
-    return packet;
+
+    // Fallback: if we entered an ARP block but didn't match the inner conditions, drop it
+    return null;
   }
 }
