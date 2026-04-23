@@ -49,6 +49,11 @@ export class PhysicalLayer implements ILayer {
         return null;
       }
     }
+    this.logger.log(
+      LayerLevel.PHYSICAL,
+      'Physical layer transmitting packet as raw bits over the medium.',
+      LogLevel.INFO,
+    );
 
     if (this.onDataTransmit) {
       this.onDataTransmit(packet, targetedNodeId);
@@ -65,6 +70,11 @@ export class PhysicalLayer implements ILayer {
     // In a real simulation, we would deserialize the payload here.
     // Since we are passing the BasePacket object directly, we just pass it on.
     packet.metadata.currentLayer = LayerLevel.PHYSICAL;
+    this.logger.log(
+      LayerLevel.PHYSICAL,
+      'Physical layer received raw bits and reassembled packet. Passing up to Data Link Layer.',
+      LogLevel.INFO,
+    );
     return packet;
   }
 }

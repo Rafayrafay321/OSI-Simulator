@@ -22,17 +22,17 @@ This project bridges the gap between theoretical networking concepts and practic
 - **L7 (Application)**: JSON serialization, payload validation, and protocol simulation.
 - **L4 (Transport)**: TCP/UDP-style segmentation, sequence numbering, and checksum calculation.
 - **L3 (Network)**: IP addressing, MTU-based fragmentation, and TTL (Time-To-Live) management.
-- **L2 (Data Link)**: ARP (Address Resolution Protocol) cache simulation and Ethernet framing.
-- **L1 (Physical)**: Bit-stream conversion and asynchronous transmission simulation.
+- **L2 (Data Link)**: Stateful ARP (Address Resolution Protocol) cache, automatic packet buffering during handshakes, and Ethernet framing.
+- **L1 (Physical)**: Bit-stream conversion, asynchronous transmission simulation, and physical medium broadcasts.
 
 ### 🛣️ Advanced Routing & Orchestration
-- **Intelligent Forwarding**: Routers utilize Layer 3 logic to determine next-hop interfaces.
-- **Default Gateway Logic**: Hosts automatically resolve and forward traffic to gateways for off-network communication.
-- **Multi-Hop Simulation**: Full support for complex topologies involving multiple network segments.
+- **Intelligent Routing**: Routers utilize Layer 3 logic to determine next-hop interfaces.
+- **L2 Switch Forwarding**: Switches dynamically learn MAC addresses and perform targeted Unicast forwarding or Broadcast flooding.
+- **Multi-Hop Topologies**: Full support for complex, dynamic topologies defined via Graph structures (Nodes & Edges).
 
 ### 📊 Modern Observability
-- **Live Log Streaming**: Real-time event tracking of every packet modification.
-- **Synchronized Visuals**: React 19 dashboard providing immediate feedback on simulation status.
+- **WebSocket Real-Time Streaming**: Live, granular event tracking of every packet modification across nodes.
+- **Synchronized Visuals**: Dashboard providing immediate feedback on simulation status and deep packet inspection via JSON snapshots.
 - **Schema Validation**: Robust data integrity ensured via Zod-powered simulation parameters.
 
 ## 🏗️ System Architecture
@@ -48,16 +48,14 @@ graph TD
         L2A --> L1A[Physical Layer]
     end
 
-    L1A -- "Ethernet Frame" --> R1[Router (Default Gateway)]
+    L1A -- "Ethernet Frame" --> SW1[Switch]
 
-    subgraph "Router"
-        RL1[L1: Physical] --> RL2[L2: MAC Resolution]
-        RL2 --> RL3[L3: IP Forwarding]
-        RL3 --> RL2_out[L2: New MAC Handoff]
-        RL2_out --> RL1_out[L1: Physical]
+    subgraph "Switch (L2 Forwarding)"
+        SL1[L1: Physical] --> SL2[L2: MAC Learning]
+        SL2 --> SL1_out[L1: Unicast/Broadcast]
     end
 
-    RL1_out -- "Ethernet Frame" --> L1B[Host B (10.0.0.5)]
+    SL1_out -- "Ethernet Frame" --> L1B[Host B (192.168.1.20)]
 
     subgraph "Host B (Destination)"
         L1B --> L2B
@@ -68,9 +66,10 @@ graph TD
 ```
 
 ### Class Hierarchy
-- **`NetworkNode`**: Base class providing core L1-L3 functionality.
+- **`NetworkNode`**: Base class providing core L1-L3 functionality and dynamic orchestration hooks.
 - **`Host`**: Extends `NetworkNode` with L4-L7 capabilities for end-system simulation.
-- **`Router`**: Specialized `NetworkNode` optimized for L3 packet switching and multi-interface management.
+- **`Router`**: Specialized node optimized for L3 packet switching and multi-interface management.
+- **`Switch`**: Specialized node optimized for L2 MAC learning and Unicast/Broadcast forwarding.
 
 ## 🛠️ Project Structure
 
@@ -137,9 +136,9 @@ npm test
 
 ## 📅 Roadmap
 
-- **Q2 2026**: Implementation of "Wireshark" deep-packet inspection (Header snapshots).
-- **Q3 2026**: Network Chaos Engine (Variable latency, jitter, and packet drop simulation).
-- **Q4 2026**: Interactive Topology Builder (Drag-and-drop node configuration).
+- **Q2 2026**: ~~Implementation of "Wireshark" deep-packet inspection (Header snapshots).~~ (Completed ✅)
+- **Q3 2026**: ~~Interactive Topology Builder (Graph-based orchestration).~~ (Completed ✅)
+- **Q4 2026**: Network Chaos Engine (Variable latency, jitter, and packet drop simulation UI integration).
 
 ## 📝 License
 

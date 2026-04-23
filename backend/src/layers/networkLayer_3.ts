@@ -132,8 +132,8 @@ export class NetworkLayer implements ILayer {
         const newFragmentPacketClone = newFragmentPacket.clone();
 
         this.logger.log(
-          LayerLevel.TRANSPORT,
-          `Segment ${i + 1} header's added successfully.`,
+          LayerLevel.NETWORK,
+          `Network layer header attached (Fragment ${i + 1}). Passing to Data Link Layer.`,
           LogLevel.INFO,
           {
             payload: newFragmentPacketClone.payload,
@@ -142,11 +142,7 @@ export class NetworkLayer implements ILayer {
           },
         );
 
-        this.logger.log(
-          LayerLevel.NETWORK,
-          `Passing fragment ${i + 1} to Data Link Layer.`,
-          LogLevel.INFO,
-        );
+
 
         fragmentsList.push(newFragmentPacket);
       }
@@ -174,8 +170,8 @@ export class NetworkLayer implements ILayer {
       const packetClone = packet.clone();
 
       this.logger.log(
-        LayerLevel.TRANSPORT,
-        "Packet header's added successfully.",
+        LayerLevel.NETWORK,
+        'Network layer header attached. Passing to Data Link Layer.',
         LogLevel.INFO,
         {
           payload: packetClone.payload,
@@ -184,11 +180,7 @@ export class NetworkLayer implements ILayer {
         },
       );
 
-      this.logger.log(
-        LayerLevel.NETWORK,
-        'Passing packet to Data Link Layer.',
-        LogLevel.INFO,
-      );
+
 
       return packet;
     }
@@ -198,7 +190,7 @@ export class NetworkLayer implements ILayer {
     packet.metadata.currentLayer = LayerLevel.NETWORK;
     this.logger.log(
       LayerLevel.NETWORK,
-      'Handling incoming packet.',
+      'Network layer processing incoming packet. Passing up to Transport Layer.',
       LogLevel.INFO,
     );
 
@@ -213,9 +205,13 @@ export class NetworkLayer implements ILayer {
     if (moreFragmentFlag === 1) {
       if (!this.fragmentBuffer.has(fragmentId)) {
         this.fragmentBuffer.set(fragmentId, [packet]);
-      } else {
         (this.fragmentBuffer.get(fragmentId) as BasePacket[]).push(packet);
       }
+      this.logger.log(
+        LayerLevel.NETWORK,
+        `Network layer processing incoming fragment. Buffering fragment.`,
+        LogLevel.INFO,
+      );
       return null;
     }
     if (this.fragmentBuffer.has(fragmentId)) {
@@ -237,6 +233,11 @@ export class NetworkLayer implements ILayer {
       const finalPaylaod = allFragmentPaylaods.join('');
       this.fragmentBuffer.delete(fragmentId);
       packet.setPayload(finalPaylaod);
+      this.logger.log(
+        LayerLevel.NETWORK,
+        'All fragments received and reassembled successfully.',
+        LogLevel.SUCCESS,
+      );
     }
 
     packet.removeHeader();

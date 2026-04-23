@@ -27,14 +27,15 @@ export class NetworkStack {
     layerToProcess.handleIncoming(packet, payload);
   }
 
-  public routeOutgoing(packet: BasePacket) {
+  public routeOutgoing(packet: BasePacket, targetedNodeId?: string) {
     const currentLayer = packet.metadata.currentLayer;
+    console.log(currentLayer);
     const layerToProcess = this.layers.get(currentLayer);
     if (!layerToProcess) {
       this.logger.log(currentLayer, 'Layer not present', LogLevel.ERROR);
       throw new Error('Layer not present to process');
     }
-    layerToProcess.handleOutgoing(packet);
+    layerToProcess.handleOutgoing(packet, targetedNodeId);
   }
 
   private recursiveSend(

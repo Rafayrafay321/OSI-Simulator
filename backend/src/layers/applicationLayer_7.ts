@@ -44,11 +44,11 @@ export class ApplicationLayer implements ILayer {
 
     this.logger.log(
       LayerLevel.APPLICATION,
-      "Application layer's header added successfully",
+      'Application layer header attached. Passing to Transport Layer.',
       LogLevel.INFO,
       {
         payload: clonedPacket.payload,
-        packetHeaders: JSON.stringify(clonedPacket.headers, null, 2),
+        packetHeaders: clonedPacket.headers,
         packetMetadata: clonedPacket.metadata,
       },
     );
@@ -66,7 +66,7 @@ export class ApplicationLayer implements ILayer {
 
     this.logger.log(
       LayerLevel.APPLICATION,
-      'Received Packet from transport Layer.',
+      'Application layer processing incoming packet. Extracting payload.',
       LogLevel.INFO,
       {
         payload: packetClone.payload,

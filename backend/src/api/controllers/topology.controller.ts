@@ -26,8 +26,12 @@ export const createTopology = (
       graph.addNode(node);
     });
 
-    edges.forEach((edge: [TopologyNode, TopologyNode]) => {
-      graph.addEdge(edge[0], edge[1]);
+    edges.forEach((edge: [string, string]) => {
+      const nodeA = graph.getNode(edge[0]);
+      const nodeB = graph.getNode(edge[1]);
+      if (nodeA && nodeB) {
+        graph.addEdge(nodeA, nodeB);
+      }
     });
 
     const topologyId = crypto.randomUUID();

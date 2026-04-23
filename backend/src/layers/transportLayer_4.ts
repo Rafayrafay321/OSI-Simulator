@@ -102,7 +102,7 @@ export class TransportLayer implements ILayer {
 
         this.logger.log(
           LayerLevel.TRANSPORT,
-          `Segment ${i + 1} header's added successfully.`,
+          `Transport layer header attached (Segment ${i + 1}/${noOfSegments}). Passing to Network Layer.`,
           LogLevel.INFO,
           {
             payload: newSegmentPacketClone.payload,
@@ -111,11 +111,7 @@ export class TransportLayer implements ILayer {
           },
         );
 
-        this.logger.log(
-          LayerLevel.TRANSPORT,
-          `Passing segment ${i + 1} to Network Layer.`,
-          LogLevel.INFO,
-        );
+
         segmentsList.push(newSegmentPacket);
       }
       return segmentsList;
@@ -144,7 +140,7 @@ export class TransportLayer implements ILayer {
 
       this.logger.log(
         LayerLevel.TRANSPORT,
-        "Packet header's added successfully.",
+        'Transport layer header attached. Passing to Network Layer.',
         LogLevel.INFO,
         {
           payload: packetClone.payload,
@@ -153,11 +149,7 @@ export class TransportLayer implements ILayer {
         },
       );
 
-      this.logger.log(
-        LayerLevel.TRANSPORT,
-        'Passing packet to Network Layer.',
-        LogLevel.INFO,
-      );
+
       return packet;
     }
   }
@@ -165,11 +157,7 @@ export class TransportLayer implements ILayer {
   public handleIncoming(packet: BasePacket): BasePacket | null {
     packet.metadata.currentLayer = LayerLevel.TRANSPORT;
 
-    this.logger.log(
-      LayerLevel.TRANSPORT,
-      'Handling incoming packet.',
-      LogLevel.INFO,
-    );
+
     const header = packet.getHeader() as TransportLayerData;
 
     if (header.totalSegment === 1) {
@@ -177,7 +165,7 @@ export class TransportLayer implements ILayer {
 
       this.logger.log(
         LayerLevel.TRANSPORT,
-        'Packet Recived from network Layer.',
+        'Transport layer processing incoming packet. Passing up to Application Layer.',
         LogLevel.INFO,
         {
           payload: packetClone.payload,
@@ -186,11 +174,7 @@ export class TransportLayer implements ILayer {
         },
       );
 
-      this.logger.log(
-        LayerLevel.TRANSPORT,
-        'Passing single packet up to Application Layer.',
-        LogLevel.INFO,
-      );
+
       packet.removeHeader();
       return packet;
     }
@@ -205,7 +189,7 @@ export class TransportLayer implements ILayer {
     const packetClone = packet.clone();
     this.logger.log(
       LayerLevel.TRANSPORT,
-      `Segment ${header.segmentIndex} of ${header.totalSegment}. recieved from networkLayer`,
+      `Transport layer processing incoming segment ${header.segmentIndex + 1}/${header.totalSegment}. Buffering segment.`,
       LogLevel.INFO,
       {
         payload: packetClone.payload,
@@ -215,11 +199,7 @@ export class TransportLayer implements ILayer {
     );
 
     buffer.push(packet);
-    this.logger.log(
-      LayerLevel.TRANSPORT,
-      `Buffering segment ${header.segmentIndex} of ${header.totalSegment}.`,
-      LogLevel.INFO,
-    );
+
 
     if (buffer.length === header.totalSegment) {
       this.logger.log(
@@ -252,7 +232,7 @@ export class TransportLayer implements ILayer {
       const reassambledPacketClone = reassembledPacket.clone();
       this.logger.log(
         LayerLevel.TRANSPORT,
-        'All segments received. Reassembled successfully.',
+        'All segments received and reassembled successfully. Passing up to Application Layer.',
         LogLevel.SUCCESS,
         {
           payload: reassambledPacketClone.payload,
@@ -265,11 +245,7 @@ export class TransportLayer implements ILayer {
 
       this.segmentBuffer.delete(packetId);
 
-      this.logger.log(
-        LayerLevel.TRANSPORT,
-        'Passing reassembled packet up to Application Layer.',
-        LogLevel.INFO,
-      );
+
 
       return reassembledPacket;
     }

@@ -1,4 +1,5 @@
 import WebSocket from 'ws';
+import util from 'util';
 
 const PORT = 3001; // Ensure this matches your running server
 const BASE_URL = `http://localhost:${PORT}/api`;
@@ -63,7 +64,7 @@ async function runTest() {
         });
 
         const simData = await simRes.json();
-        console.log(`✅ Simulation Completed! Final API Response:\n`, simData);
+        console.log(`✅ Simulation Completed! Final API Response:\n`, util.inspect(simData, { depth: null, colors: true }));
         
         console.log('\nClosing connection in 2 seconds...');
         setTimeout(() => ws.close(), 2000);
@@ -74,7 +75,7 @@ async function runTest() {
       }
     } else {
       // These are likely the streaming logs from the Orchestrator!
-      console.log('📡 [STREAM LOG]:', message);
+      console.log('📡 [STREAM LOG]:', util.inspect(message, { depth: null, colors: true }));
     }
   });
 

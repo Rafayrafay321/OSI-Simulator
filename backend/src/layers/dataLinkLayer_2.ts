@@ -87,8 +87,8 @@ export class DataLinkLayer implements ILayer {
     if (!destMac) {
       this.logger.log(
         LayerLevel.DATA_LINK,
-        `MAC address for IP ${nextHopIp} not found in ARP cache. Sending Boardcast ARP request`,
-        LogLevel.ERROR,
+        `MAC for IP ${nextHopIp} not found. Buffering packet and broadcasting ARP Request.`,
+        LogLevel.INFO,
       );
       const existingPackets = this.packetBuffer.get(nextHopIp) || [];
       existingPackets.push(packet);
@@ -116,7 +116,7 @@ export class DataLinkLayer implements ILayer {
 
     this.logger.log(
       LayerLevel.DATA_LINK,
-      `Found MAC address ${destMac} for IP ${nextHopIp}.`,
+      `Data Link layer header attached. Found MAC address ${destMac} for IP ${nextHopIp}. Passing to Physical Layer.`,
       LogLevel.INFO,
     );
 
@@ -137,16 +137,7 @@ export class DataLinkLayer implements ILayer {
     packet.metadata.currentLayer = LayerLevel.DATA_LINK;
 
     const packetClone = packet.clone();
-    this.logger.log(
-      LayerLevel.DATA_LINK,
-      'Passing packet to Physical Layer.',
-      LogLevel.INFO,
-      {
-        payload: packetClone.payload,
-        headers: packetClone.headers,
-        metadata: packetClone.metadata,
-      },
-    );
+
 
     return packet;
   }
@@ -191,6 +182,11 @@ export class DataLinkLayer implements ILayer {
       const ipToCheck = incommingPaylaod.split(':')[1].trim();
 
       if (ipToCheck === this.srcIp) {
+        this.logger.log(
+          LayerLevel.DATA_LINK,
+          `ARP Request matched my IP (${this.srcIp}). Generating ARP Reply.`,
+          LogLevel.INFO,
+        );
         const arpReply = new BasePacket();
         arpReply.setPayload(
           `I have this IP: ${ipToCheck}, My MAC is: ${this.srcMac}`,
@@ -217,15 +213,21 @@ export class DataLinkLayer implements ILayer {
 
       this.logger.log(
         LayerLevel.DATA_LINK,
-        'BoardCasting: As it is meant for boardCasting',
+        'Ignoring broadcast ARP request (Not for me).',
         LogLevel.INFO,
       );
-    } else if (incommingPaylaod.startsWith('I have this ip:')) {
+    } else if (incommingPaylaod.startsWith('I have this IP:')) {
       const pattern = /IP: (.+?), My MAC is: (.+)/;
       const match = incommingPaylaod.match(pattern);
       if (match) {
         const [, incomingIp, incomingMac] = match;
         this.arpTable.set(incomingIp, incomingMac);
+        
+        this.logger.log(
+          LayerLevel.DATA_LINK,
+          `ARP Reply received! Learned MAC ${incomingMac} for IP ${incomingIp}.`,
+          LogLevel.SUCCESS,
+        );
 
         if (this.packetBuffer.has(incomingIp)) {
           const waitingPacketList = this.packetBuffer.get(incomingIp);
@@ -233,6 +235,12 @@ export class DataLinkLayer implements ILayer {
           if (waitingPacketList === undefined) {
             return null;
           }
+          
+          this.logger.log(
+            LayerLevel.DATA_LINK,
+            `Flushing ${waitingPacketList.length} buffered packet(s) to IP ${incomingIp}...`,
+            LogLevel.INFO,
+          );
 
           for (const packet of waitingPacketList) {
             const checkSum = this.calCheckSum(
@@ -255,6 +263,7 @@ export class DataLinkLayer implements ILayer {
             packet.metadata.currentLayer = LayerLevel.PHYSICAL;
             this.networkStack.routeOutgoing(packet);
           }
+          this.packetBuffer.delete(incomingIp);
         }
         return null;
       }
