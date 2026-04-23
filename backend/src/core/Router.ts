@@ -8,14 +8,10 @@ import { NetworkLayer } from '../layers/networkLayer_3';
 import type { RouterConfig } from '../types';
 export class Router extends NetworkNode {
   public networkLayer: NetworkLayer;
-  //   private routingTable: Map<string, string>;
-  constructor(
-    name: string,
-    config: RouterConfig,
-    logger: Logger,
-    arpCache: Map<string, string>,
-  ) {
-    super(name, config, logger, arpCache);
+  private arpCacheTable: Map<string, string> = new Map();
+
+  constructor(name: string, config: RouterConfig, logger: Logger) {
+    super(name, config, logger);
 
     this.networkLayer = new NetworkLayer(
       {

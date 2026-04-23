@@ -9,7 +9,6 @@ import { LayerLevel, LogLevel, LogEntry, simulationConfig } from '../types';
 
 export class Orchestrator {
   public logger: Logger = new Logger();
-  private arpCache: Map<string, string> = new Map();
   private activeDevices: Map<string, Host | Router | Switch> = new Map();
   private topologyGraph: TopologyGraph;
 
@@ -34,7 +33,6 @@ export class Orchestrator {
                 dropChance: config.dropChance,
               },
               this.logger,
-              this.arpCache,
             ),
           );
           break;
@@ -50,7 +48,6 @@ export class Orchestrator {
                 dropChance: config.dropChance,
               },
               this.logger,
-              this.arpCache,
             ),
           );
           break;
@@ -66,7 +63,6 @@ export class Orchestrator {
                 portCount: 32,
               },
               this.logger,
-              this.arpCache,
             ),
           );
           break;

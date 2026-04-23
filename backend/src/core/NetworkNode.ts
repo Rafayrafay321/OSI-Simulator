@@ -9,42 +9,20 @@ export abstract class NetworkNode {
   public networkStack: NetworkStack;
   public physicalLayer: PhysicalLayer;
   public dataLinkLayer: DataLinkLayer;
-  public networkLayer: NetworkLayer;
+  // private arpCache: Map<string, string> = new Map();
 
-  constructor(
-    name: string,
-    config: NodeConfig,
-    logger: Logger,
-    arpCache: Map<string, string>,
-  ) {
+  constructor(name: string, config: NodeConfig, logger: Logger) {
     this.networkStack = new NetworkStack(logger);
 
     this.physicalLayer = new PhysicalLayer(logger);
 
     this.dataLinkLayer = new DataLinkLayer(
-      { srcMac: config.macAddress, etherType: 123 },
-      arpCache,
+      { srcMac: config.macAddress!, etherType: 123 },
       logger,
       config.defaultGateway,
     );
 
-    this.networkLayer = new NetworkLayer(
-      {
-        id: `net-${name}`,
-        srcIp: config.ipAddress,
-        destIp: '0.0.0.0',
-        ttl: 64,
-        protocol: 6,
-        DFflag: 0,
-        MFflag: 0,
-        fragmentOffSet: 0,
-      },
-      logger,
-      undefined,
-    );
-
     this.networkStack.registerLayer(this.physicalLayer);
     this.networkStack.registerLayer(this.dataLinkLayer);
-    this.networkStack.registerLayer(this.networkLayer);
   }
 }

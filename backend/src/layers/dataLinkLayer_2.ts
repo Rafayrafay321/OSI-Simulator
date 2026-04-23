@@ -17,19 +17,18 @@ export class DataLinkLayer implements ILayer {
   public level = LayerLevel.DATA_LINK;
   public srcMac: string;
   public etherType: number;
-  private arpCache: Map<string, string>;
+  private arpTable: Map<string, string> = new Map();
+  private packetBuffer: Map<string, BasePacket[]> = new Map();
   private logger: Logger;
   private defaultGateway?: string;
 
   constructor(
     options: DataLinkLayerOptions,
-    arpCache: Map<string, string>,
     logger: Logger,
     defaultGateway?: string,
   ) {
     this.srcMac = options.srcMac;
     this.etherType = options.etherType;
-    this.arpCache = arpCache;
     this.logger = logger;
     this.defaultGateway = defaultGateway;
   }
@@ -77,16 +76,35 @@ export class DataLinkLayer implements ILayer {
     }
 
     const nextHopIp = this.defaultGateway || packet.metadata.destinationIp;
-    console.log(nextHopIp);
-    const destMac = this.arpCache.get(nextHopIp);
+    const destMac = this.arpTable.get(nextHopIp);
 
     if (!destMac) {
       this.logger.log(
         LayerLevel.DATA_LINK,
-        `MAC address for IP ${nextHopIp} not found in ARP cache.`,
+        `MAC address for IP ${nextHopIp} not found in ARP cache. Sending Boardcast ARP request`,
         LogLevel.ERROR,
       );
-      throw new Error(`Ip: ${nextHopIp} has no Mac Address`);
+      const existingPackets = this.packetBuffer.get(nextHopIp) || [];
+      existingPackets.push(packet);
+      this.packetBuffer.set(nextHopIp, existingPackets);
+
+      const arpRequest = new BasePacket();
+      arpRequest.setPayload(`Any one has this ip: ${nextHopIp}`);
+
+      const checkSum = this.calCheckSum(
+        { srcMac: this.srcMac, etherType: this.etherType },
+        'FF:FF:FF:FF:FF:FF',
+        arpRequest.payload!,
+        arpRequest,
+      );
+
+      arpRequest.addHeader(LayerLevel.DATA_LINK, {
+        srcMac: this.srcMac,
+        destMac: 'FF:FF:FF:FF:FF:FF',
+        etherType: this.etherType,
+        trailer: checkSum,
+      });
+      return arpRequest;
     }
 
     this.logger.log(
@@ -110,7 +128,7 @@ export class DataLinkLayer implements ILayer {
     });
 
     packet.metadata.currentLayer = LayerLevel.DATA_LINK;
-    
+
     const packetClone = packet.clone();
     this.logger.log(
       LayerLevel.DATA_LINK,

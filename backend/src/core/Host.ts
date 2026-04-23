@@ -19,14 +19,10 @@ export class Host extends NetworkNode {
   public applicationLayer: ApplicationLayer;
   public transportLayer: TransportLayer;
   public networkLayer: NetworkLayer;
+  private arpCacheTable: Map<string, string> = new Map();
 
-  constructor(
-    name: string,
-    config: HostConfig,
-    logger: Logger,
-    arpCache: Map<string, string>,
-  ) {
-    super(name, config, logger, arpCache);
+  constructor(name: string, config: HostConfig, logger: Logger) {
+    super(name, config, logger);
 
     this.transportLayer = new TransportLayer(
       {

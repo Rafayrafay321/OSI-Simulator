@@ -48,7 +48,7 @@ export class ApplicationLayer implements ILayer {
       LogLevel.INFO,
       {
         payload: clonedPacket.payload,
-        packetHeaders: clonedPacket.headers,
+        packetHeaders: JSON.stringify(clonedPacket.headers, null, 2),
         packetMetadata: clonedPacket.metadata,
       },
     );
